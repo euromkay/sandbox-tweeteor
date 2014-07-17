@@ -85,4 +85,3 @@ while True:
             with exitor.lock:
                 exitor.exited = True
     pygame.time.wait(10)
-
