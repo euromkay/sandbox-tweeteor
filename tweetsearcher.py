@@ -1,16 +1,18 @@
 import base64, requests, time, threading, auth
-
+#Searches twitter based on user-set parameters, and makes a list of the tweets(dictionaries)
 class TweetSearcher(threading.Thread):
 	def __init__(self):
                 threading.Thread.__init__(self)
+                #Authentication
                 credentials = base64.b64encode(auth.key + ':' + auth.secret)
                 headers = {'Authorization': 'Basic ' + credentials, 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
                 r = requests.post('https://api.twitter.com/oauth2/token', headers = headers, data = 'grant_type=client_credentials')
                 bearerToken = r.json()['access_token']
 		self._headers = {'Authorization': 'Bearer ' + bearerToken}
-		self.daemon = True
+		#End of Authentication
+		self.daemon = True#Daemon threads close when the rest of the process closes, so you don't need to manually close the thread
 		self.recentList = []
-		self.listLock = threading.Condition()
+		self.listLock = threading.Condition()#I used a condition instead of a lock here, so tweetviewer only updates when needed
 		self._userList = []
 		self._hashtagList = []
 		self._excludedWordList = []
@@ -63,16 +65,17 @@ class TweetSearcher(threading.Thread):
 	def run(self):
                 while True:
                         search = self._getSearch()
-                        if search == '':
+                        if search == '':#Twitter returns an error for empty searches, so this is a way around it
                                 tweets = []
                         else:
-                                params = {'q': self._getSearch(), 'result_type': 'recent', 'lang': 'en', 'count': 50}
+                                params = {'q': self._getSearch(), 'result_type': 'recent', 'lang': 'en', 'count': 50}#Check twitter API for all parameters
                                 r = requests.get('https://api.twitter.com/1.1/search/tweets.json', headers = self._headers, params = params)
-                                tweets = [ tweet for tweet in r.json()['statuses'] if 'retweeted_status' not in tweet]
+                                tweets = [ tweet for tweet in r.json()['statuses'] if 'retweeted_status' not in tweet]#No need for boring retweets
 			with self.listLock:
 				self.recentList = tweets
-				self.listLock.notify()
-			time.sleep(4)
+				self.listLock.notify()#Tells tweetviewer to update its screen
+			time.sleep(4)#Don't want the loop to run to often, or else you hit the twitter rate limit
+	#Helper method for assembling search query
 	def _getSearch(self):
                 search = ''
 		with self._searchLock:
