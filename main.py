@@ -1,4 +1,7 @@
-import pygame, tweetsearcher, tweetviewer, sys, threading
+import pygame, sys
+from tweetsearcher import *
+from tweetviewer import *
+from threading import Thread, Lock
 from pygame.locals import *
 def inputHandler(searcher, exitor):
     while True:
@@ -65,14 +68,14 @@ def inputHandler(searcher, exitor):
 class Exitor:
     def __init__(self):
         self.exited = False
-        self.lock = threading.Lock()
+        self.lock = Lock()
 pygame.init()
-searcher = tweetsearcher.TweetSearcher()
+searcher = TweetSearcher()
 searcher.start()
-view = tweetviewer.TweetViewer(searcher, (1800, 600))
+view = TweetViewer(searcher, (1800, 600))
 view.start()
 exitor = Exitor()
-inHandler = threading.Thread(target = inputHandler, args = (searcher, exitor))
+inHandler = Thread(target = inputHandler, args = (searcher, exitor))
 inHandler.daemon = True
 inHandler.start()
 while True:
