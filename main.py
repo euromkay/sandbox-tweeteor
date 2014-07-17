@@ -3,10 +3,12 @@ from tweetsearcher import *
 from tweetviewer import *
 from threading import Thread, Lock
 from pygame.locals import *
+# Allows the user to interact with the program (view/change search parameters, exit). Currently only controllable through the terminal.
 def inputHandler(searcher, exitor):
     while True:
-        if exitor.exited:
-            break
+        with exitor.lock:
+            if exitor.exited:
+                break#closes thread
         print '''              1 - Add User
               2 - Remove User
               3 - Add Hashtag
@@ -57,7 +59,7 @@ def inputHandler(searcher, exitor):
             for user in l:
                 print user
             continue
-        elif method == '13':
+        elif method == '13':#Exits thread, and tells other threads to do the same
             with exitor.lock:
                 exitor.exited = True
                 break
@@ -65,6 +67,7 @@ def inputHandler(searcher, exitor):
             continue
         f(raw_input())
         
+#Class for keeping track of whether the program has been closed (so that no threads are left running)        
 class Exitor:
     def __init__(self):
         self.exited = False
@@ -76,9 +79,9 @@ view = TweetViewer(searcher, (1800, 600))
 view.start()
 exitor = Exitor()
 inHandler = Thread(target = inputHandler, args = (searcher, exitor))
-inHandler.daemon = True
+inHandler.daemon = True#Makes it a daemon thread, so I don't have to manually close the thread(not working for some reason)
 inHandler.start()
-while True:
+while True:#This loop makes sure the program closes when it needs to, and so that it doesn't freeze up(not responding)
     with exitor.lock:
         if exitor.exited:
             pygame.quit()
@@ -87,4 +90,4 @@ while True:
         if event.type == QUIT:
             with exitor.lock:
                 exitor.exited = True
-    pygame.time.wait(10)
+    pygame.time.wait(10)#Without this, uses too much cpu time
