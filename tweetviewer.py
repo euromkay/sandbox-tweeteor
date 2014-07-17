@@ -48,7 +48,6 @@ class TweetViewer(threading.Thread):
                                 pygame.display.update()
                                 self.searcher.listLock.wait()
 	def getImage(self, mediaObj):
-		print 'getting image'
 		if mediaObj['media_url'] in self.tempfiles:
 			temp = open(self.tempfiles[mediaObj['media_url']].name)
 			temp.seek(0)
@@ -61,7 +60,6 @@ class TweetViewer(threading.Thread):
 			imgRequest = requests.get(mediaObj['media_url'])
 		if imgRequest.status_code == 200:
 			temp = tempfile.NamedTemporaryFile(mode = 'rb+', delete = False)
-			print 'image downloaded'
 			temp.write(imgRequest.content)
 			temp.seek(0)
 			self.tempfiles[mediaObj['media_url']] = temp
