@@ -45,7 +45,7 @@ class TweetViewer(threading.Thread):
                                         tweetList.append(newTweetSurface(surfaceList))
                                 blitList(self.screen, tweetList)
                                 pygame.display.update()
-                                pygame.time.wait(5)
+				self.searcher.listLock.wait()
 def blitList(surface, sourceList):
         loc = [0, 0]
         addedList = []
@@ -54,6 +54,8 @@ def blitList(surface, sourceList):
                         loc[1] = 0
                         loc[0] += max([s.get_width() for s in addedList])
                         addedList = []
+		if loc[0] + source.get_width() > surface.get_width():
+			continue
                 surface.blit(source, loc)
                 loc[1] += source.get_height()
                 addedList.append(source)

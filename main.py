@@ -84,4 +84,5 @@ while True:
         if event.type == QUIT:
             with exitor.lock:
                 exitor.exited = True
+    pygame.time.wait(10)
 
