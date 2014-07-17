@@ -1,10 +1,12 @@
-import base64, requests, time, threading, auth
+import requests, time, auth
+from base64 import b64encode
+from threading import Thread, Lock, Condition
 #Searches twitter based on user-set parameters, and makes a list of the tweets(dictionaries)
-class TweetSearcher(threading.Thread):
+class TweetSearcher(Thread):
 	def __init__(self):
-                threading.Thread.__init__(self)
+                Thread.__init__(self)
                 #Authentication
-                credentials = base64.b64encode(auth.key + ':' + auth.secret)
+                credentials = b64encode(auth.key + ':' + auth.secret)
                 headers = {'Authorization': 'Basic ' + credentials, 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
                 r = requests.post('https://api.twitter.com/oauth2/token', headers = headers, data = 'grant_type=client_credentials')
                 bearerToken = r.json()['access_token']
@@ -12,12 +14,12 @@ class TweetSearcher(threading.Thread):
 		#End of Authentication
 		self.daemon = True#Daemon threads close when the rest of the process closes, so you don't need to manually close the thread
 		self.recentList = []
-		self.listLock = threading.Condition()#I used a condition instead of a lock here, so tweetviewer only updates when needed
+		self.listLock = Condition()#I used a condition instead of a lock here, so tweetviewer only updates when needed
 		self._userList = []
 		self._hashtagList = []
 		self._excludedWordList = []
 		self._excludedUserList = []
-		self._searchLock = threading.Lock()
+		self._searchLock = Lock()
 	def getUsers(self):
                 with self._searchLock:
                         return list(self._userList)

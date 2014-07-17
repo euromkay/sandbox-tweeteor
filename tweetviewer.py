@@ -1,4 +1,8 @@
-import tweetsearcher, pygame, requests, threading, StringIO, tempfile
+import pygame, requests
+from tweetsearcher import *
+from threading import Thread
+from StringIO import StringIO
+from tempfile import NamedTemporaryFile
 import pygame.freetype as font#You might have errors with this. If you do, you can change it to pygame.font, and change the calles to Font.render() a bit
 import xml.sax.saxutils as xml
 
@@ -10,9 +14,9 @@ BORDER_WIDTH = 10
 BORDER_HEIGHT = 10
 
 #Takes the tweetlist from tweetsearcher, and displays it using pygame
-class TweetViewer(threading.Thread):
+class TweetViewer(Thread):
         def __init__(self, searcher, size):
-                threading.Thread.__init__(self)
+                Thread.__init__(self)
                 self.daemon = True#daemon threads close automatically when the process is finished
                 self.screen = pygame.display.set_mode(size)
                 self.nameFont = font.SysFont('helvetica', 20)#Helvetica is the closest to twitter's special font
@@ -64,7 +68,7 @@ class TweetViewer(threading.Thread):
 		else:
 			imgRequest = requests.get(mediaObj['media_url'])
 		if imgRequest.status_code == 200:#make sure the link worked
-			temp = tempfile.NamedTemporaryFile(mode = 'rb+', delete = False)
+			temp = NamedTemporaryFile(mode = 'rb+', delete = False)
 			temp.write(imgRequest.content)#Saves image in temp file so it only has to be downloaded once
 			temp.seek(0)#moves to start of file
 			self.tempfiles[mediaObj['media_url']] = temp
