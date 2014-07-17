@@ -1,4 +1,4 @@
-import tweetsearcher, pygame, requests, threading, StringIO
+import tweetsearcher, pygame, requests, threading, StringIO, tempfile
 import pygame.freetype as font
 import xml.sax.saxutils as xml
 
@@ -16,6 +16,7 @@ class TweetViewer(threading.Thread):
                 self.nameFont = font.SysFont('helvetica', 20)
                 self.textFont = font.SysFont('helvetica', 15)
                 self.searcher = searcher
+		self.tempfiles = {}
         def run(self):
                 while True:
                         self.screen.fill(white)
@@ -39,13 +40,34 @@ class TweetViewer(threading.Thread):
                                                         text = text[0:entity['indices'][0]] + text[entity['indices'][1]:]
                                         surfaceList.extend([self.textFont.render(unicode(xml.unescape(line)), black)[0] for line in text.split('\n')])
                                         if 'media' in tweet['entities']:
-                                                surfaceList.extend([getImage(media) for media in tweet['entities']['media'] if media['type'] == 'photo'])
+                                                surfaceList.extend([self.getImage(media) for media in tweet['entities']['media'] if media['type'] == 'photo'])
                                         popSurface = self.textFont.render('Retweets: ' + str(tweet['retweet_count']) + '    ' + 'Favorites: ' + str(tweet['favorite_count']), black)[0]
                                         surfaceList.append(popSurface)
                                         tweetList.append(newTweetSurface(surfaceList))
                                 blitList(self.screen, tweetList)
                                 pygame.display.update()
-                                pygame.time.wait(5)
+                                self.searcher.listLock.wait()
+	def getImage(self, mediaObj):
+		print 'getting image'
+		if mediaObj['media_url'] in self.tempfiles:
+			temp = open(self.tempfiles[mediaObj['media_url']].name)
+			temp.seek(0)
+			return pygame.image.load(temp)
+		if 'thumb' in mediaObj['sizes']:
+			imgRequest = requests.get(mediaObj['media_url'] + ':thumb')
+		elif 'small' in mediaObj['sizes']:
+			imgRequest = requests.get(mediaObj['media_url'] + ':small')
+		else:
+			imgRequest = requests.get(mediaObj['media_url'])
+		if imgRequest.status_code == 200:
+			temp = tempfile.NamedTemporaryFile(mode = 'rb+', delete = False)
+			print 'image downloaded'
+			temp.write(imgRequest.content)
+			temp.seek(0)
+			self.tempfiles[mediaObj['media_url']] = temp
+			return pygame.image.load(temp)
+		else:
+			return None
 def blitList(surface, sourceList):
         loc = [0, 0]
         addedList = []
@@ -64,15 +86,3 @@ def newTweetSurface(surfaceList):
         tweetSurface.fill(white)
         blitList(tweetSurface, surfaceList)
         return tweetSurface
-def getImage(mediaObj):
-        if 'thumb' in mediaObj['sizes']:
-                imgRequest = requests.get(mediaObj['media_url'] + ':thumb')
-        elif 'small' in mediaObj['sizes']:
-                imgRequest = requests.get(mediaObj['media_url'] + ':small')
-        else:
-                imgRequest = requests.get(mediaObj['media_url'])
-        if imgRequest.status_code == 200:
-                fakeFile = StringIO.StringIO(imgRequest.content)
-                return pygame.image.load(fakeFile)
-        else:
-                return None

@@ -71,6 +71,7 @@ class TweetSearcher(threading.Thread):
                                 tweets = [ tweet for tweet in r.json()['statuses'] if 'retweeted_status' not in tweet]
 			with self.listLock:
 				self.recentList = tweets
+				self.listLock.notify()
 			time.sleep(4)
 	def _getSearch(self):
                 search = ''
