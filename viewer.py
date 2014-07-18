@@ -26,11 +26,13 @@ class TweetViewer(Thread):
         #Updates screen
         def run(self):
                 while True:
+			####
 			with self.exitor.lock:
 				if self.exitor.exited:
 					for tfile in self.tempfiles.values():
 						tfile.close()
 					sys.exit()
+			####
                         self.screen.fill(white)
                         with self.searcher.listLock:
                                 tweetList = []#List of tweet surfaces, not tweets themselves
@@ -38,37 +40,36 @@ class TweetViewer(Thread):
                                         surfaceList = []#surfaces that make up the tweet surface
                                         nameSurface = self.nameFont.render('@' + tweet['user']['screen_name'], blue)[0]
                                         surfaceList.append(nameSurface)
-                                        text = tweet['text']
-                                        entities = []#List of all urls and media urls in tweet
-                                        if 'urls' in tweet['entities']:#adds urls to entities
-                                                entities.extend([(entity, 'url') for entity in tweet['entities']['urls']])
-                                        if 'media' in tweet['entities']:#adds mediau urls to entities
-                                                entities.extend([(entity, 'media') for entity in tweet['entities']['media']])
-                                        entities = reversed(sorted(entities, key = lambda (entity, eType): entity['indices']))
-                                        for (entity, eType) in entities:#Removes media urls, and lengthens normal urls
-                                                if eType == 'url':
-                                                        text = text[0:entity['indices'][0]] + entity['expanded_url'] + text[entity['indices'][1]:]
-                                                if eType == 'media':
-                                                        text = text[0:entity['indices'][0]] + text[entity['indices'][1]:]
+					text, images = self.expandLinks(tweet)
                                         surfaceList.extend([self.textFont.render(unicode(xml.unescape(line)), black)[0] for line in text.split('\n')])#unescapes characters so they appear right, and splits multiline tweets into multiple lines
-                                        if 'media' in tweet['entities']:#Gets all those nice images
-                                                surfaceList.extend([self.getImage(media) for media in tweet['entities']['media'] if media['type'] == 'photo'])
+					if images != []:
+						surfaceList.extend(images)
                                         popSurface = self.textFont.render('Retweets: ' + str(tweet['retweet_count']) + '    ' + 'Favorites: ' + str(tweet['favorite_count']), black)[0]
                                         surfaceList.append(popSurface)
                                         tweetList.append(newTweetSurface(surfaceList))
                                 blitList(self.screen, tweetList)#puts all tweet surfaces on screen
-				#Deleting all files that are no longer in use (not loaded during the last main loop)
-				deletedFiles = []
-				tempList = iter(self.tempfiles)
-				for key in tempList:
-					if not self.tempfiles[key].inUse:
-						self.tempfiles[key].close()#Tempfiles are deleted when closed
-						deletedFiles.append(key)
-					self.tempfiles[key].inUse = False
-				for key in deletedFiles:
-					del self.tempfiles[key]#Removing file from list
+				self.deleteUnusedTempfiles()
                                 pygame.display.update()
                                 self.searcher.listLock.wait()#waits until the tweet list changes
+	#Helper method that takes a tweet, and returns the tweet text with all urls expanded (and image urls removed), along with a list of all the images
+	def expandLinks(self, tweet):
+		text = tweet['text']
+		imgList = []
+		entities = []#List of all urls and media urls in tweet
+		if 'urls' in tweet['entities']:#adds urls to entities
+			entities.extend([(entity, 'url') for entity in tweet['entities']['urls']])
+		if 'media' in tweet['entities']:#adds mediau urls to entities
+			for entity in tweet['entities']['media']:
+				entities.append((entity, 'media'))
+				if entity['type'] == 'photo':
+					imgList.append(self.getImage(entity))
+		entities = reversed(sorted(entities, key = lambda (entity, eType): entity['indices']))
+		for (entity, eType) in entities:#Removes media urls, and lengthens normal urls
+			if eType == 'url':
+				text = text[0:entity['indices'][0]] + entity['expanded_url'] + text[entity['indices'][1]:]
+			if eType == 'media':
+				text = text[0:entity['indices'][0]] + text[entity['indices'][1]:]
+		return text, imgList
         #Helper method for loading images
 	def getImage(self, mediaObj):
 		if mediaObj['media_url'] in self.tempfiles:#Loads pre-downloaded images from tempfiles
@@ -92,6 +93,16 @@ class TweetViewer(Thread):
 			return pygame.image.load(StringIO(temp.read()))#I use StringIO to stop pygame from closing the tempfile
 		else:
 			return None#Not sure what happens if this is actually returned
+	def deleteUnusedTempfiles(self):
+		deletedKeys = []
+		tempList = iter(self.tempfiles)
+		for key in tempList:
+			if not self.tempfiles[key].inUse:
+				self.tempfiles[key].close()#Tempfiles are deleted when closed
+				deletedKeys.append(key)
+			self.tempfiles[key].inUse = False
+		for key in deletedKeys:
+			del self.tempfiles[key]#Removing file from list
 #Helper method for placing surfaces on a larger surface
 def blitList(surface, sourceList):
         loc = [0, 0]
