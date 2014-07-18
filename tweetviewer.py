@@ -1,4 +1,4 @@
-import pygame, requests
+import pygame, requests, sys
 from tweetsearcher import *
 from threading import Thread
 from StringIO import StringIO
@@ -15,17 +15,22 @@ BORDER_HEIGHT = 10
 
 #Takes the tweetlist from tweetsearcher, and displays it using pygame
 class TweetViewer(Thread):
-        def __init__(self, searcher, size):
+        def __init__(self, searcher, size, exitor):
                 Thread.__init__(self)
-                self.daemon = True#daemon threads close automatically when the process is finished
                 self.screen = pygame.display.set_mode(size)
                 self.nameFont = font.SysFont('helvetica', 20)#Helvetica is the closest to twitter's special font
                 self.textFont = font.SysFont('helvetica', 15)
                 self.searcher = searcher
+		self.exitor = exitor
 		self.tempfiles = {}#Image temp files
         #Updates screen
         def run(self):
                 while True:
+			with self.exitor.lock:
+				if self.exitor.exited:
+					for tfile in self.tempfiles.values():
+						tfile.close()
+					sys.exit()
                         self.screen.fill(white)
                         with self.searcher.listLock:
                                 tweetList = []#List of tweet surfaces, not tweets themselves
@@ -52,14 +57,25 @@ class TweetViewer(Thread):
                                         surfaceList.append(popSurface)
                                         tweetList.append(newTweetSurface(surfaceList))
                                 blitList(self.screen, tweetList)#puts all tweet surfaces on screen
+				#Deleting all files that are no longer in use (not loaded during the last main loop)
+				deletedFiles = []
+				tempList = iter(self.tempfiles)
+				for key in tempList:
+					if not self.tempfiles[key].inUse:
+						self.tempfiles[key].close()#Tempfiles are deleted when closed
+						deletedFiles.append(key)
+					self.tempfiles[key].inUse = False
+				for key in deletedFiles:
+					del self.tempfiles[key]#Removing file from list
                                 pygame.display.update()
                                 self.searcher.listLock.wait()#waits until the tweet list changes
         #Helper method for loading images
 	def getImage(self, mediaObj):
 		if mediaObj['media_url'] in self.tempfiles:#Loads pre-downloaded images from tempfiles
-			temp = open(self.tempfiles[mediaObj['media_url']].name)
-			temp.seek(0)#Moves to start of the file, so everything is read
-			return pygame.image.load(temp)
+			temp = self.tempfiles[mediaObj['media_url']]
+			temp.seek(0)
+			temp.inUse = True
+			return pygame.image.load(StringIO(temp.read()))#I use StringIO to stop pygame from closing the tempfile
 		#For images not already downloaded, gets smallest size possible
 		if 'thumb' in mediaObj['sizes']:
 			imgRequest = requests.get(mediaObj['media_url'] + ':thumb')
@@ -68,11 +84,12 @@ class TweetViewer(Thread):
 		else:
 			imgRequest = requests.get(mediaObj['media_url'])
 		if imgRequest.status_code == 200:#make sure the link worked
-			temp = NamedTemporaryFile(mode = 'rb+', delete = False)
+			temp = NamedTemporaryFile()
 			temp.write(imgRequest.content)#Saves image in temp file so it only has to be downloaded once
 			temp.seek(0)#moves to start of file
-			self.tempfiles[mediaObj['media_url']] = temp
-			return pygame.image.load(temp)
+			temp.inUse = True
+			self.tempfiles[mediaObj['media_url']] = temp 
+			return pygame.image.load(StringIO(temp.read()))#I use StringIO to stop pygame from closing the tempfile
 		else:
 			return None#Not sure what happens if this is actually returned
 #Helper method for placing surfaces on a larger surface

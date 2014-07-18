@@ -8,7 +8,7 @@ def inputHandler(searcher, exitor):
     while True:
         with exitor.lock:
             if exitor.exited:
-                break#closes thread
+                sys.exit()
         print '''              1 - Add User
               2 - Remove User
               3 - Add Hashtag
@@ -72,12 +72,13 @@ class Exitor:
     def __init__(self):
         self.exited = False
         self.lock = Lock()
+
 pygame.init()
+exitor = Exitor()
 searcher = TweetSearcher()
 searcher.start()
-view = TweetViewer(searcher, (1800, 600))
+view = TweetViewer(searcher, (1800, 600), exitor)
 view.start()
-exitor = Exitor()
 inHandler = Thread(target = inputHandler, args = (searcher, exitor))
 inHandler.daemon = True#Makes it a daemon thread, so I don't have to manually close the thread(not working for some reason)
 inHandler.start()
