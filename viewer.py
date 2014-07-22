@@ -1,5 +1,6 @@
-import pygame, requests, sys
-from tweetsearcher import *
+import pygame, requests, sys, json
+from base64 import *
+from searcher import *
 from threading import Thread
 from StringIO import StringIO
 from tempfile import NamedTemporaryFile
@@ -14,25 +15,24 @@ BORDER_WIDTH = 10
 BORDER_HEIGHT = 10
 
 #Takes the tweetlist from tweetsearcher, and displays it using pygame
-class TweetViewer(Thread):
+class Viewer(Thread):
         def __init__(self, searcher, size, exitor):
                 Thread.__init__(self)
-                self.screen = pygame.display.set_mode(size)
+		self.screen = pygame.Surface(size)
                 self.nameFont = font.SysFont('helvetica', 20)#Helvetica is the closest to twitter's special font
                 self.textFont = font.SysFont('helvetica', 15)
                 self.searcher = searcher
 		self.exitor = exitor
 		self.tempfiles = {}#Image temp files
+		self.sock = None
         #Updates screen
         def run(self):
                 while True:
-			####
 			with self.exitor.lock:
 				if self.exitor.exited:
 					for tfile in self.tempfiles.values():
 						tfile.close()
 					sys.exit()
-			####
                         self.screen.fill(white)
                         with self.searcher.listLock:
                                 tweetList = []#List of tweet surfaces, not tweets themselves
@@ -48,9 +48,18 @@ class TweetViewer(Thread):
                                         surfaceList.append(popSurface)
                                         tweetList.append(newTweetSurface(surfaceList))
                                 blitList(self.screen, tweetList)#puts all tweet surfaces on screen
+				scrStr = b64encode(pygame.image.tostring(self.screen, 'RGBA')) #I encode the string in base64 because json cannot store pure binary data
+				scrSize = self.screen.get_size()
+				s = json.dumps([scrStr, scrSize])
+				if self.sock is not None:
+					self.sock.send(str(len(s))) #The client can't recieve all the data in one go, so I have to tell it how much data to wait for
+					self.sock.recv(4)
+					self.sock.sendall(s)
+					self.sock.recv(4) #waiting to keep the client and server in sync
 				self.deleteUnusedTempfiles()
-                                pygame.display.update()
                                 self.searcher.listLock.wait()#waits until the tweet list changes
+	def addClient(self, client):
+		self.sock = client
 	#Helper method that takes a tweet, and returns the tweet text with all urls expanded (and image urls removed), along with a list of all the images
 	def expandLinks(self, tweet):
 		text = tweet['text']

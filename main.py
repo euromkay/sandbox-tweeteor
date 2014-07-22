@@ -1,16 +1,34 @@
 import pygame, sys
 from controller import *
-from tweetsearcher import *
-from tweetviewer import *
+from searcher import *
+from viewer import *
 from threading import Thread, Lock
 from pygame.locals import *
+from socket import *
 
+class Server(Thread):
+	def __init__(self, address, viewer):
+		Thread.__init__(self)
+		self.sock = socket()
+		self.sock.bind(address)
+		self.daemon = True
+		self.sock.listen(5)
+		self.viewer = viewer
+	def run(self):
+		while True:
+			(client, clAddr) = self.sock.accept()
+			self.viewer.addClient(client)
+		
 pygame.init()
 exitor = Exitor()
-searcher = TweetSearcher()
+searcher = Searcher()
 searcher.start()
-view = TweetViewer(searcher, (1800, 600), exitor)
+info = pygame.display.Info()
+view = Viewer(searcher, (info.current_w, info.current_h), exitor) #info.current_w and info.current_h are the width and height of the entire screen
 view.start()
+address = ('', int(raw_input("Enter port #")))
+server = Server(address, view)
+server.start()
 inHandler = Controller(searcher, exitor)
 inHandler.start()
 while True:#This loop makes sure the program closes when it needs to, and so that it doesn't freeze up(not responding)
@@ -18,8 +36,4 @@ while True:#This loop makes sure the program closes when it needs to, and so tha
         if exitor.exited:
             pygame.quit()
             sys.exit()
-    for event in pygame.event.get():
-        if event.type == QUIT:
-            with exitor.lock:
-                exitor.exited = True
     pygame.time.wait(10)#Without this, uses too much cpu time

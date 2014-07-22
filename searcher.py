@@ -2,7 +2,7 @@ import requests, time, auth
 from base64 import b64encode
 from threading import Thread, Lock, Condition
 #Searches twitter based on user-set parameters, and makes a list of the tweets(dictionaries)
-class TweetSearcher(Thread):
+class Searcher(Thread):
 	def __init__(self):
                 Thread.__init__(self)
                 #Authentication
