@@ -49,7 +49,7 @@ class Viewer(Thread):
                                 self.putTweetsOnScreen(tweetList)#puts all tweet surfaces on screen
 				for i in range(len(self.clients)):
 					window = pygame.Surface(WIN_SIZE)
-					window.blit(self.screen, (0, 0), area = pygame.Rect(0, i * WIN_HEIGHT, WIN_WIDTH, WIN_HEIGHT))
+					window.blit(self.screen, (0, 0), area = pygame.Rect((i // WIN_PER_COLUMN) * WIN_WIDTH, (i % WIN_PER_COLUMN) * WIN_HEIGHT, WIN_WIDTH, WIN_HEIGHT))
 					scrStr = b64encode(pygame.image.tostring(window, 'RGBA')) #I encode the string in base64 because json cannot store pure binary data
 					scrSize = window.get_size()
 					s = json.dumps([scrStr, scrSize])
