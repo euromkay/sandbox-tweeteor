@@ -31,6 +31,8 @@ class Viewer(Thread):
 				if self.exitor.exited:
 					for tfile in self.tempfiles.values():
 						tfile.close()
+					for client in self.clients:
+						client.send("exit")
 					sys.exit()
                         self.screen.fill(white)
                         with self.searcher.listLock:
@@ -46,20 +48,10 @@ class Viewer(Thread):
                                         popSurface = self.textFont.render('Retweets: ' + str(tweet['retweet_count']) + '    ' + 'Favorites: ' + str(tweet['favorite_count']), black)[0]
                                         surfaceList.append(popSurface)
                                         tweetList.append(newTweetSurface(surfaceList))
-                                self.putTweetsOnScreen(tweetList)#puts all tweet surfaces on screen
-				for i in range(len(self.clients)):
-					window = pygame.Surface(WIN_SIZE)
-					window.blit(self.screen, (0, 0), area = pygame.Rect((i // WIN_PER_COLUMN) * WIN_WIDTH, (i % WIN_PER_COLUMN) * WIN_HEIGHT, WIN_WIDTH, WIN_HEIGHT))
-					scrStr = b64encode(pygame.image.tostring(window, 'RGBA')) #I encode the string in base64 because json cannot store pure binary data
-					scrSize = window.get_size()
-					s = json.dumps([scrStr, scrSize])
-					client = self.clients[i]
-					client.send(str(len(s))) #The client can't recieve all the data in one go, so I have to tell it how much data to wait for
-					client.recv(4)
-					client.sendall(s)
-					client.recv(4) #waiting to keep the client and server in sync
+				self.putTweetsOnScreen(tweetList)#puts all tweet surfaces on screen
+				self.sendScreen()
 				self.deleteUnusedTempfiles()
-                                self.searcher.listLock.wait()#waits until the tweet list changes
+				self.searcher.listLock.wait()#waits until the tweet list changes
 	def addClient(self, client):
 		self.sock = client
 		self.clients.append(client)
@@ -107,6 +99,18 @@ class Viewer(Thread):
 			return None#Not sure what happens if this is actually returned
 	def putTweetsOnScreen(self, tweetList):
 		blitList(self.screen, tweetList)
+	def sendScreen(self):
+		for i in range(len(self.clients)):
+			window = pygame.Surface(WIN_SIZE)
+			window.blit(self.screen, (0, 0), area = pygame.Rect((i // WIN_PER_COLUMN) * WIN_WIDTH, (i % WIN_PER_COLUMN) * WIN_HEIGHT, WIN_WIDTH, WIN_HEIGHT))
+			scrStr = b64encode(pygame.image.tostring(window, 'RGBA')) #I encode the string in base64 because json cannot store pure binary data
+			scrSize = window.get_size()
+			s = json.dumps([scrStr, scrSize])
+			client = self.clients[i]
+			client.send(str(len(s))) #The client can't recieve all the data in one go, so I have to tell it how much data to wait for
+			client.recv(4)
+			client.sendall(s)
+			client.recv(4) #waiting to keep the client and server in sync
 	def deleteUnusedTempfiles(self):
 		deletedKeys = []
 		tempList = iter(self.tempfiles)

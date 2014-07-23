@@ -18,8 +18,12 @@ class Client(Thread):
 		self.screen = pygame.display.set_mode(WIN_SIZE)
 	def run(self):
 		while True:
+			msg = self.sock.recv(2048)
+			if msg[0:4] == 'exit':
+				pygame.quit()
+				sys.exit()
+			length = int(msg)
 			self.screen.fill(white)
-			length = int(self.sock.recv(2048))
 			self.sock.send(' ')
 			s = self.sock.recv(2048)
 			#Calls recv multiple times to get the entire message
@@ -35,7 +39,7 @@ client = Client(address)
 client.start()
 while True:
 	for event in pygame.event.get():
-        	if event.type == QUIT:
-            		pygame.quit()
+		if event.type == QUIT:
+			pygame.quit()
 			sys.exit()
 	pygame.time.wait(10)

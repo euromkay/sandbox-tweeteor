@@ -7,15 +7,19 @@ from pygame.locals import *
 from socket import *
 
 class Server(Thread):
-	def __init__(self, address, viewer):
+	def __init__(self, address, viewer, exitor):
 		Thread.__init__(self)
 		self.sock = socket()
 		self.sock.bind(address)
-		self.daemon = True
 		self.sock.listen(5)
 		self.viewer = viewer
+		self.exitor = exitor
+		self.daemon = True
 	def run(self):
 		while True:
+			with self.exitor.lock:
+				if self.exitor.exited:
+					sys.exit()
 			(client, clAddr) = self.sock.accept()
 			self.viewer.addClient(client)
 		
@@ -26,7 +30,7 @@ searcher.start()
 view = Viewer(searcher, exitor) #info.current_w and info.current_h are the width and height of the entire screen
 view.start()
 address = ('', int(raw_input("Enter port #")))
-server = Server(address, view)
+server = Server(address, view, exitor)
 server.start()
 inHandler = Controller(searcher, exitor)
 inHandler.start()
