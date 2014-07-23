@@ -1,6 +1,7 @@
 import pygame, requests, sys, json
 from base64 import *
 from searcher import *
+from constants import *
 from threading import Thread
 from StringIO import StringIO
 from tempfile import NamedTemporaryFile
@@ -8,23 +9,21 @@ import pygame.freetype as font#You might have errors with this. If you do, you c
 import xml.sax.saxutils as xml
 
 #Constants
-white = pygame.Color(255, 255, 255, 255)
-black = pygame.Color(0, 0, 0, 255)
-blue = pygame.Color(0, 0, 255, 255)
 BORDER_WIDTH = 10
 BORDER_HEIGHT = 10
 
 #Takes the tweetlist from tweetsearcher, and displays it using pygame
 class Viewer(Thread):
-        def __init__(self, searcher, size, exitor):
+        def __init__(self, searcher, exitor):
                 Thread.__init__(self)
-		self.screen = pygame.Surface(size)
+		self.screen = pygame.Surface(SCR_SIZE)
                 self.nameFont = font.SysFont('helvetica', 20)#Helvetica is the closest to twitter's special font
                 self.textFont = font.SysFont('helvetica', 15)
                 self.searcher = searcher
 		self.exitor = exitor
 		self.tempfiles = {}#Image temp files
 		self.sock = None
+		self.clients = []
         #Updates screen
         def run(self):
                 while True:
@@ -47,19 +46,23 @@ class Viewer(Thread):
                                         popSurface = self.textFont.render('Retweets: ' + str(tweet['retweet_count']) + '    ' + 'Favorites: ' + str(tweet['favorite_count']), black)[0]
                                         surfaceList.append(popSurface)
                                         tweetList.append(newTweetSurface(surfaceList))
-                                blitList(self.screen, tweetList)#puts all tweet surfaces on screen
-				scrStr = b64encode(pygame.image.tostring(self.screen, 'RGBA')) #I encode the string in base64 because json cannot store pure binary data
-				scrSize = self.screen.get_size()
-				s = json.dumps([scrStr, scrSize])
-				if self.sock is not None:
-					self.sock.send(str(len(s))) #The client can't recieve all the data in one go, so I have to tell it how much data to wait for
-					self.sock.recv(4)
-					self.sock.sendall(s)
-					self.sock.recv(4) #waiting to keep the client and server in sync
+                                self.putTweetsOnScreen(tweetList)#puts all tweet surfaces on screen
+				for i in range(len(self.clients)):
+					window = pygame.Surface(WIN_SIZE)
+					window.blit(self.screen, (0, 0), area = pygame.Rect(0, i * WIN_HEIGHT, WIN_WIDTH, WIN_HEIGHT))
+					scrStr = b64encode(pygame.image.tostring(window, 'RGBA')) #I encode the string in base64 because json cannot store pure binary data
+					scrSize = window.get_size()
+					s = json.dumps([scrStr, scrSize])
+					client = self.clients[i]
+					client.send(str(len(s))) #The client can't recieve all the data in one go, so I have to tell it how much data to wait for
+					client.recv(4)
+					client.sendall(s)
+					client.recv(4) #waiting to keep the client and server in sync
 				self.deleteUnusedTempfiles()
                                 self.searcher.listLock.wait()#waits until the tweet list changes
 	def addClient(self, client):
 		self.sock = client
+		self.clients.append(client)
 	#Helper method that takes a tweet, and returns the tweet text with all urls expanded (and image urls removed), along with a list of all the images
 	def expandLinks(self, tweet):
 		text = tweet['text']
@@ -102,6 +105,8 @@ class Viewer(Thread):
 			return pygame.image.load(StringIO(temp.read()))#I use StringIO to stop pygame from closing the tempfile
 		else:
 			return None#Not sure what happens if this is actually returned
+	def putTweetsOnScreen(self, tweetList):
+		blitList(self.screen, tweetList)
 	def deleteUnusedTempfiles(self):
 		deletedKeys = []
 		tempList = iter(self.tempfiles)

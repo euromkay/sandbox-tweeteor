@@ -23,8 +23,7 @@ pygame.init()
 exitor = Exitor()
 searcher = Searcher()
 searcher.start()
-info = pygame.display.Info()
-view = Viewer(searcher, (info.current_w, info.current_h), exitor) #info.current_w and info.current_h are the width and height of the entire screen
+view = Viewer(searcher, exitor) #info.current_w and info.current_h are the width and height of the entire screen
 view.start()
 address = ('', int(raw_input("Enter port #")))
 server = Server(address, view)
