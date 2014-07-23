@@ -22,18 +22,18 @@ class Viewer(Thread):
                 self.searcher = searcher
 		self.exitor = exitor
 		self.tempfiles = {}#Image temp files
-		self.sock = None
 		self.clients = []
         #Updates screen
         def run(self):
+		print 'viewer'
                 while True:
 			with self.exitor.lock:
 				if self.exitor.exited:
 					for tfile in self.tempfiles.values():
 						tfile.close()
 					for client in self.clients:
-						client.send("exit")
-					sys.exit()
+						client[0].close()
+					return
                         self.screen.fill(white)
                         with self.searcher.listLock:
                                 tweetList = []#List of tweet surfaces, not tweets themselves
@@ -53,8 +53,8 @@ class Viewer(Thread):
 				self.deleteUnusedTempfiles()
 				self.searcher.listLock.wait()#waits until the tweet list changes
 	def addClient(self, client):
-		self.sock = client
-		self.clients.append(client)
+		coords = json.loads(client.recv(16))
+		self.clients.append((client, coords))
 	#Helper method that takes a tweet, and returns the tweet text with all urls expanded (and image urls removed), along with a list of all the images
 	def expandLinks(self, tweet):
 		text = tweet['text']
@@ -100,15 +100,14 @@ class Viewer(Thread):
 	def putTweetsOnScreen(self, tweetList):
 		blitList(self.screen, tweetList)
 	def sendScreen(self):
-		for i in range(len(self.clients)):
+		for (client, coords) in self.clients:
 			window = pygame.Surface(WIN_SIZE)
-			window.blit(self.screen, (0, 0), area = pygame.Rect((i // WIN_PER_COLUMN) * WIN_WIDTH, (i % WIN_PER_COLUMN) * WIN_HEIGHT, WIN_WIDTH, WIN_HEIGHT))
+			window.blit(self.screen, (0, 0), area = pygame.Rect(coords[0] * WIN_WIDTH, coords[1] * WIN_HEIGHT, WIN_WIDTH, WIN_HEIGHT))
 			scrStr = b64encode(pygame.image.tostring(window, 'RGBA')) #I encode the string in base64 because json cannot store pure binary data
 			scrSize = window.get_size()
 			s = json.dumps([scrStr, scrSize])
-			client = self.clients[i]
 			client.send(str(len(s))) #The client can't recieve all the data in one go, so I have to tell it how much data to wait for
-			client.recv(4)
+			client.recv(3)
 			client.sendall(s)
 			client.recv(4) #waiting to keep the client and server in sync
 	def deleteUnusedTempfiles(self):

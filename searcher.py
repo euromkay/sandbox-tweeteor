@@ -1,4 +1,4 @@
-import requests, time, auth
+import requests, time, auth, sys
 from base64 import b64encode
 from threading import Thread, Lock, Condition
 #Searches twitter based on user-set parameters, and makes a list of the tweets(dictionaries)
@@ -12,7 +12,6 @@ class Searcher(Thread):
                 bearerToken = r.json()['access_token']
 		self._headers = {'Authorization': 'Bearer ' + bearerToken}
 		#End of Authentication
-		self.daemon = True#Daemon threads close when the rest of the process closes, so you don't need to manually close the thread
 		self.recentList = []
 		self.listLock = Condition()#I used a condition instead of a lock here, so tweetviewer only updates when needed
 		self._userList = []
@@ -20,6 +19,7 @@ class Searcher(Thread):
 		self._excludedWordList = []
 		self._excludedUserList = []
 		self._searchLock = Lock()
+		self.daemon = True
 	def getUsers(self):
                 with self._searchLock:
                         return list(self._userList)

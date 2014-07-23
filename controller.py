@@ -6,13 +6,10 @@ class Controller(Thread):
 	def __init__(self, searcher, exitor):
 		Thread.__init__(self)
 		self.searcher = searcher
-		self.exitor = exitor
 		self.daemon = True
+		self.exitor = exitor
 	def run(self):
 	    while True:
-		with self.exitor.lock:
-		    if self.exitor.exited:
-			sys.exit()
 		print '''              1 - Add User
 		      2 - Remove User
 		      3 - Add Hashtag
@@ -66,7 +63,7 @@ class Controller(Thread):
 		elif method == '13':#Exits thread, and tells other threads to do the same
 		    with self.exitor.lock:
 			self.exitor.exited = True
-			sys.exit()
+			return
 		else:
 		    continue
 		f(raw_input())
