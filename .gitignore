@@ -59,5 +59,3 @@ docs/_build/
 #Twitter API key
 auth.py*
 
-#Config files
-*.conf
