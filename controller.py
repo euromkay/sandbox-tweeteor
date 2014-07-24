@@ -1,13 +1,11 @@
 from threading import Thread, Lock
-import sys
+import threading, sys, pygame, logging
 
 # Allows the user to interact with the program (view/change search parameters, exit). Currently only controllable through the terminal.
 class Controller(Thread):
-	def __init__(self, searcher, exitor):
-		Thread.__init__(self)
+	def __init__(self, searcher):
+		Thread.__init__(self, name = 'Controller')
 		self.searcher = searcher
-		self.daemon = True
-		self.exitor = exitor
 	def run(self):
 	    while True:
 		print '''              1 - Add User
@@ -61,14 +59,13 @@ class Controller(Thread):
 			print user
 		    continue
 		elif method == '13':#Exits thread, and tells other threads to do the same
-		    with self.exitor.lock:
-			self.exitor.exited = True
-			return
+			for t in threading.enumerate():
+				if hasattr(t, 'exit'):
+					t.exit.set()
+					t.join()
+			logging.debug('exiting')
+			pygame.quit()
+			sys.exit()
 		else:
 		    continue
 		f(raw_input())
-#Class for keeping track of whether the program has been closed (so that no threads are left running)        
-class Exitor:
-    def __init__(self):
-        self.exited = False
-        self.lock = Lock()

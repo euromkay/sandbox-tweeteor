@@ -11,7 +11,7 @@ blue = pygame.Color(0, 0, 255, 255)
 
 class Client(Thread):
 	def __init__(self, address, coords):
-		Thread.__init__(self)
+		Thread.__init__(self, name = 'Client')
 		pygame.init()
 		self.coords = self.x, self.y = coords
 		self.sock = socket()
@@ -21,7 +21,7 @@ class Client(Thread):
 	def run(self):
 		while True:
 			msg = self.sock.recv(1024)
-			if msg == 0:
+			if msg[0:4] == 'exit':
 				self.sock.close()
 				pygame.quit()
 				sys.exit()

@@ -4,7 +4,7 @@ from threading import Thread, Lock, Condition
 #Searches twitter based on user-set parameters, and makes a list of the tweets(dictionaries)
 class Searcher(Thread):
 	def __init__(self):
-                Thread.__init__(self)
+                Thread.__init__(self, name = 'Searcher')
                 #Authentication
                 credentials = b64encode(auth.key + ':' + auth.secret)
                 headers = {'Authorization': 'Basic ' + credentials, 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
@@ -19,7 +19,7 @@ class Searcher(Thread):
 		self._excludedWordList = []
 		self._excludedUserList = []
 		self._searchLock = Lock()
-		self.daemon = True
+		self.setDaemon(True)
 	def getUsers(self):
                 with self._searchLock:
                         return list(self._userList)
