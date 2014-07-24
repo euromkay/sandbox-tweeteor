@@ -1,12 +1,10 @@
-import requests, time, auth, sys
-from base64 import b64encode
+import requests, time, sys
 from threading import Thread, Lock, Condition
 #Searches twitter based on user-set parameters, and makes a list of the tweets(dictionaries)
 class Searcher(Thread):
-	def __init__(self):
+	def __init__(self, credentials):
                 Thread.__init__(self, name = 'Searcher')
                 #Authentication
-                credentials = b64encode(auth.key + ':' + auth.secret)
                 headers = {'Authorization': 'Basic ' + credentials, 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
                 r = requests.post('https://api.twitter.com/oauth2/token', headers = headers, data = 'grant_type=client_credentials')
                 bearerToken = r.json()['access_token']

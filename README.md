@@ -2,8 +2,9 @@ Tweeteor
 ========
 
 Meteor's social media screen saver.
-In order for this program to work, you must first make a file called "auth.py" with two variables in it: key and secret. These variables should be your twitter api key and secret, respectively.
-All files except client.py go on the computer acting as the server, while only constants.py and client.py go on the client.
+In order for this program to work, you must first add your twitter api key and secret to server.conf.
+All files except client.py and client.conf go on the server, while only constants.py, client.py, and client.conf go on the client.
 To start the program, run main.py on the server, then run client.py on the client(s). 
-To change the size of the individual windows, or the number of windows per column/row, alter the constants.py module.
-
+To change the port and address used for communication, edit server.conf and client.conf.
+To change the size and number of windows, edit server.conf.
+When you install Tweeteor on the actual Meteor cluster, change auto to True in client.conf/coordinates, and set the correct x and y coordinates for the window.

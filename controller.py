@@ -58,12 +58,11 @@ class Controller(Thread):
 		    for user in l:
 			print user
 		    continue
-		elif method == '13':#Exits thread, and tells other threads to do the same
+		elif method == '13': #Closes all nondaemon threads, then quits pygame
 			for t in threading.enumerate():
 				if hasattr(t, 'exit'):
 					t.exit.set()
 					t.join()
-			logging.debug('exiting')
 			pygame.quit()
 			sys.exit()
 		else:
