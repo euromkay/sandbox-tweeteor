@@ -1,80 +1,69 @@
-###How to use###
+############
+# How to use  #
+############
 
-#Use initPic (profile picture)(you could also just blit the image onto the mover) and initRan outside
-#of the main pygame loop. Then use makeMove inside of the main pygame loop to move the
-#mover
+#init() Is to be called outside of the pygame loop with its options being however many instances (int) of floating movers you
+#need. makeMove() Should then be used inside the main pygame loop for however many instances you want. 
 
 #Essentially what this does is it creates the position of the mover and a randomly generated point
 #outside of the loop then inside the loop the mover moves one pixel torwards the randomly
-#generated point then once it gets there generates a new random point. In order to move more
+#generated point then once it gets there it generates a new random point. In order to move more
 #than one pixel a frame the program checks if the randomly generated point is divisible by the
 #amount of pixels moved
-
-
-#initPic(instance number, profile picture filename)
-#font(fontname, fontsize)
-#makeMove(username string, message string, font function, instance, x instance, y instance, xran instance, yran instance)
 
 import pygame, sys, time, random, urllib, urllib2, os, Image
 from pygame.locals import *
 from random import *
 
-def initPic(d,inputPic=None):
-    global picDict
-    picDict = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+picList, x, y ,ranx ,rany = [],[],[],[],[] #Storage for pictures and mover location
+rectLength=0 
+c=1 #speed- Pixels to move per frame
+
+def init(instance): #For initializing the picture and coordinate stuff for however many "instance"'s we need
+    global ranx,rany,x,y
+    n=0
+    while n != instance:
+        initPic(n)
+        initRan(n)
+        print n
+        n += 1    
+
+def initPic(d,inputPic=None): #Takes a picture, resizes it then makes it into a pygame object
+    global picList
     if inputPic==None:
         getPic=urllib.urlretrieve('http://placekitten.com/300/300' ,'toBeResized.png')
         inputPic = 'toBeResized.png'
     resize = Image.open(inputPic)
     r = resize.resize((100,100), Image.BILINEAR)
-    r.save("pic"+str(d)+".png")
-    picDict[d] = pygame.image.load("pic"+ str(d) +".png").convert() #Import your porn pics
+    r.save("pic"+str(instance)+".png")
+    picList.extend([ pygame.image.load("pic"+ str(instance) +".png").convert()]) 
     os.remove('toBeResized.png')
-    os.remove('pic'+str(d)+'.png')
+    os.remove('pic'+str(instance)+'.png')
     
-def initRan(instance):
-    global rectLength, c
-    rectLength=0
-    c=1 #Moving c pixels per frame
-    global x,y,ranx,rany, n
-    #probably should append to my lists huh...
-    x = [randrange(1 ,a-rectLength),randrange(1 ,a-rectLength),randrange(1 ,a-rectLength),randrange(1 ,a-rectLength),randrange(1 ,a-rectLength)]
-    y = [randrange(1,b-30),randrange(1,b-30),randrange(1,b-30),randrange(1,b-30),randrange(1,b-30),randrange(1,b-30),randrange(1,b-30)]
-    ranx = [randrange(1 ,a-rectLength),randrange(1 ,a-rectLength),randrange(1 ,a-rectLength),randrange(1 ,a-rectLength),randrange(1 ,a-rectLength)]
-    rany = [randrange(1,b-30),randrange(1,b-30),randrange(1,b-30),randrange(1,b-30),randrange(1,b-30),randrange(1,b-30),randrange(1,b-30)]
-    def checkx(instance):
-        global x,y
-        while x[g]%c !=0:
-            x[g] = randrange(1 ,a-rectLength)
-    def checky(instance):
-        global x,y
-        while y[j]%c != 0:
-            y[j] = randrange(1,b-30)
-    def checkranx(instance):
-        global a, b, n,ranx,rany
-        while ranx[g]%c !=0:
-            ranx[g] = randrange(1 ,a-rectLength)
-        if ranx[g]%c == 0:
-            n = 1
-    def checkrany(instance):
-        global a, b, n,ranx,rany
-        while rany[j]%c != 0:
-            rany[j] = randrange(1,b-30)
-        if rany[j]%c == 0:
-            n = 1
-    for k in x:
-        checkx(k)
-    for k in y:
-        checky(k)
-    for k in ranx:
-        checkranx(k)
-    for k in rany:
-        checkrany(k)
+def initRan(instance): #Creates the position of mover and the random coordinate of where it will move to
+    global x,y,ranx,rany,n
+    x.append(randrange(1 ,a-rectLength))
+    y.append(randrange(1,b-30))
+    ranx.append(randrange(1 ,a-rectLength))
+    rany.append(randrange(1,b-30))
+    while x[instance]%c !=0:
+        x[instance] = randrange(1 ,a-rectLength)
+    while y[instance]%c != 0:
+        y[instance] = randrange(1,b-30)
+    while ranx[instance]%c !=0:
+        ranx[instance] = randrange(1 ,a-rectLength)
+    if ranx[instance]%c == 0:
+        n = 1
+    while rany[instance]%c != 0:
+        rany[instance] = randrange(1,b-30)
+    if rany[instance]%c == 0:
+        n = 1   
         
-def makeMove(instance):  
-    global ranx, rany, n, x, y
+def makeMove(instance):  #Move mover 'c' amount of pixels torwards random coordinate. Must be inside main pygame loop
+    global x,y,ranx,rany,n
     rectLength = len(message) * 9 #length of the whole message string so that the text doesnt float outside of the surface
-    if n == 1:
+
+    if n == 1: #New random point making logic
         rany[instance] = randrange(1 ,b-30)
         while rany[instance]%c !=0:
             rany[instance] = randrange(1 ,b-30)
@@ -86,7 +75,8 @@ def makeMove(instance):
         if ranx[instance]%c != 0:
             n = 1
         n = 2
-    while True: 
+        
+    while True: #Moving torwards coordinate logic
         if x[instance] == ranx[instance]: #If x is equal to the randomly generated x then it will create a new one and print it
             ranx[instance] = randrange(1,a-rectLength)
             while ranx[instance]%c != 0:
@@ -113,7 +103,7 @@ def makeMove(instance):
     mover.topleft = (x[instance],y[instance]) #topleft 
     #surface.blit(messagestringandwhatnot, mover) an example
         
-def event():
+def event(): #If we want pygame events
     global mouseX, mouseY
     for event in pygame.event.get(): #Loop for accepting user input
             if event.type == QUIT: #Lets you quit
@@ -122,10 +112,13 @@ def event():
             elif event.type == MOUSEMOTION: #Move mouse x and y to mouse position
                 mouseX, mouseY = event.pos
                 
-#initPic(0 , 'picture0')
-#initPic(1 , 'picture1')
-#initRan(0)
-#initRan(1)
+    
+#########
+# Example #
+#########
+                
+#init(2) 
+    
 #while True:
     #makeMove(0)
     #makeMove(1)
