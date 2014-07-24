@@ -55,5 +55,9 @@ docs/_build/
 #Swap and backup files
 *~
 *.sw*
+
 #Twitter API key
 auth.py*
+
+#Config files
+*.conf
