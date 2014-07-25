@@ -1,9 +1,8 @@
-import pygame, sys, logging
+import sys, logging
 from base64 import b64encode
 from controller import *
 from searcher import *
-from threading import Thread, Lock, Event
-from pygame.locals import *
+from threading import Thread, Lock
 from socket import *
 from ConfigParser import SafeConfigParser
 
@@ -46,6 +45,8 @@ class Server(Thread):
 	def addClient(self, client):
 		with self.clientLock:
 			client.send(json.dumps(WIN_SIZE))
+			client.recv(3)
+			client.send(json.dumps(SCR_SIZE))
 			self.clients.append(client)
 		
 address = ('', config.getint('connection', 'port'))

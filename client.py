@@ -1,6 +1,5 @@
 from socket import *
 from pygame.locals import *
-from constants import *
 from threading import Thread, Event
 from ConfigParser import SafeConfigParser
 from StringIO import StringIO
@@ -10,15 +9,13 @@ import xml.sax.saxutils as xml
 import pygame, sys, json, threading, requests, logging
 
 logging.basicConfig(filename = 'client.log', level=logging.DEBUG, format='[%(levelname)s] (%(threadName)s) %(message)s')
-config = SafeConfigParser()
-config.read('server.conf')
 #Constants- DO NOT EDIT! change server.conf instead
 BORDER_WIDTH = 10
 BORDER_HEIGHT = 10
-WIN_SIZE = WIN_WIDTH, WIN_HEIGHT = config.getint('window', 'width'), config.getint('window', 'height')
-WIN_PER_ROW = config.getint('window', 'win_per_row')
-WIN_PER_COLUMN = config.getint('window', 'win_per_col')
-SCR_SIZE = SCR_WIDTH, SCR_HEIGHT = WIN_WIDTH * WIN_PER_ROW, WIN_HEIGHT * WIN_PER_COLUMN
+white = pygame.Color(255, 255, 255, 255)
+black = pygame.Color(0, 0, 0, 255)
+blue = pygame.Color(0, 0, 255, 255)
+
 class Client(Thread):
 	def __init__(self, address, coords, exit):
 		Thread.__init__(self, name = 'Client')
@@ -29,7 +26,9 @@ class Client(Thread):
 		self.coords = self.x, self.y = coords
 		self.sock = socket()
 		self.sock.connect(address)
-		self.screen = pygame.display.set_mode(json.loads(self.sock.recv(128))) #Gets the window size from the server
+		self.window = pygame.display.set_mode(json.loads(self.sock.recv(128))) #This represents the window belonging to the client
+		self.sock.send('ACK')
+		self.screen = pygame.Surface(json.loads(self.sock.recv(128))) #This represents the whole screen (all the clients' windows together)
 		self.exit = exit
 	def run(self):
 		while True:
@@ -52,7 +51,7 @@ class Client(Thread):
 				self.sock.close()
 				exit.set()
 				return
-			self.screen.fill(white)
+			self.window.fill(white)
 			tweets = json.loads(s)
 			tweetList = []#List of tweet surfaces, not tweets themselves
 			for tweet in tweets:#these are the actual tweets
@@ -113,10 +112,10 @@ class Client(Thread):
 			return None#Not sure what happens if this is actually returned
 	#Placeholder method so you can change how the tweets are put on the screen(e.g. moving)
 	def putTweetsOnScreen(self, tweetList):
-		entireScr = pygame.Surface(SCR_SIZE)
-		entireScr.fill(white)
-		blitList(entireScr, tweetList)
-		self.screen.blit(entireScr, (0, 0), area = pygame.Rect(self.coords[0] * WIN_WIDTH, self.coords[1] * WIN_HEIGHT, WIN_WIDTH, WIN_HEIGHT))
+		self.screen.fill(white)
+		blitList(self.screen, tweetList)
+		width, height = self.window.get_width(), self.window.get_height()
+		self.window.blit(self.screen, (0, 0), area = pygame.Rect(self.coords[0] * width, self.coords[1] * height, width, height))
 	#Helper method to clear out images that aren't needed
 	def deleteUnusedTempfiles(self):
 		deletedKeys = []
