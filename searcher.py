@@ -1,8 +1,8 @@
-import requests, time, sys
+import requests, time, sys, json
 from threading import Thread, Lock, Condition
 #Searches twitter based on user-set parameters, and makes a list of the tweets(dictionaries)
 class Searcher(Thread):
-	def __init__(self, credentials):
+	def __init__(self, credentials, server):
                 Thread.__init__(self, name = 'Searcher')
                 #Authentication
                 headers = {'Authorization': 'Basic ' + credentials, 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'}
@@ -10,13 +10,12 @@ class Searcher(Thread):
                 bearerToken = r.json()['access_token']
 		self._headers = {'Authorization': 'Bearer ' + bearerToken}
 		#End of Authentication
-		self.recentList = []
-		self.listLock = Condition()#I used a condition instead of a lock here, so tweetviewer only updates when needed
 		self._userList = []
 		self._hashtagList = []
 		self._excludedWordList = []
 		self._excludedUserList = []
 		self._searchLock = Lock()
+		self.server = server
 		self.setDaemon(True)
 	def getUsers(self):
                 with self._searchLock:
@@ -71,9 +70,8 @@ class Searcher(Thread):
                                 params = {'q': self._getSearch(), 'result_type': 'recent', 'lang': 'en', 'count': 100}#Check twitter API for all parameters
                                 r = requests.get('https://api.twitter.com/1.1/search/tweets.json', headers = self._headers, params = params)
                                 tweets = [ tweet for tweet in r.json()['statuses'] if 'retweeted_status' not in tweet]#No need for boring retweets
-			with self.listLock:
-				self.recentList = tweets
-				self.listLock.notify()#Tells tweetviewer to update its screen
+			msg = json.dumps(tweets)
+			self.server.send(msg)
 			time.sleep(4)#Don't want the loop to run to often, or else you hit the twitter rate limit
 	#Helper method for assembling search query
 	def _getSearch(self):
