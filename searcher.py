@@ -1,5 +1,5 @@
 import requests, time, sys, json
-from threading import Thread, Lock, Condition
+from threading import Thread, Lock, Event
 #Searches twitter based on user-set parameters, and makes a list of the tweets(dictionaries)
 class Searcher(Thread):
 	def __init__(self, credentials, server):
@@ -16,7 +16,7 @@ class Searcher(Thread):
 		self._excludedUserList = []
 		self._searchLock = Lock()
 		self.server = server
-		self.setDaemon(True)
+		self.exit = Event()
 	def getUsers(self):
                 with self._searchLock:
                         return list(self._userList)
@@ -63,6 +63,9 @@ class Searcher(Thread):
                                 self._excludedUserList.remove(user)
 	def run(self):
                 while True:
+			if self.exit.isSet():
+				self.server.send('exit')
+				return
                         search = self._getSearch()
                         if search == '':#Twitter returns an error for empty searches, so this is a way around it
                                 tweets = []

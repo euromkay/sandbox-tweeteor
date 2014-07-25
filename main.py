@@ -2,7 +2,6 @@ import pygame, sys, logging
 from base64 import b64encode
 from controller import *
 from searcher import *
-from viewer import *
 from threading import Thread, Lock, Event
 from pygame.locals import *
 from socket import *

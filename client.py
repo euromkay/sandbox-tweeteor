@@ -40,10 +40,6 @@ class Client(Thread):
 				sys.exit()
 			msg = self.sock.recv(1024)
 			#Exits if server tells client to close. That makes two ways to close the client
-			if msg[0:4] == 'exit':
-				self.sock.close()
-				exit.set()
-				return
 			length = int(msg)
 			self.sock.send('ACK') #Tells server that it got the length
 			s = self.sock.recv(2048)
@@ -52,6 +48,10 @@ class Client(Thread):
 				s += self.sock.recv(2048)
 			self.sock.send('done')
 			s = s[0:length]#cut off the extra bytes
+			if s == 'exit':
+				self.sock.close()
+				exit.set()
+				return
 			self.screen.fill(white)
 			tweets = json.loads(s)
 			tweetList = []#List of tweet surfaces, not tweets themselves
