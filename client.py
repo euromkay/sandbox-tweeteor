@@ -3,11 +3,10 @@ from pygame.locals import *
 from glob import glob
 from threading import Thread, Event
 from ConfigParser import SafeConfigParser
-from StringIO import StringIO
 from tempfile import NamedTemporaryFile
 import pygame.freetype as font#You might have errors with this. If you do, you can change it to pygame.font, and change the calles to Font.render() a bit
 import xml.sax.saxutils as xml
-import pygame, sys, json, threading, requests, logging
+import pygame, sys, json, threading, logging
 
 #Constants
 BORDER_WIDTH = 10
@@ -93,24 +92,13 @@ class Client(Thread):
 			temp = open(glob('/tmp/' + mediaObj['media_url'].replace('/', '') + '*')[0], mode = 'r')
 			self.tempfiles[mediaObj['media_url']] = temp
 		temp.seek(0)
-		return pygame.image.load(StringIO(temp.read()))#I use StringIO to stop pygame from closing the tempfile
+		return pygame.image.load(temp)
 	#Placeholder method so you can change how the tweets are put on the screen(e.g. moving)
 	def putTweetsOnScreen(self, tweetList):
 		self.screen.fill(white)
 		blitList(self.screen, tweetList)
 		width, height = self.window.get_width(), self.window.get_height()
 		self.window.blit(self.screen, (0, 0), area = pygame.Rect(self.coords[0] * width, self.coords[1] * height, width, height))
-	#Helper method to clear out images that aren't needed
-	def deleteUnusedTempfiles(self):
-		deletedKeys = []
-		tempList = iter(self.tempfiles)
-		for key in tempList:
-			if not self.tempfiles[key].inUse:
-				self.tempfiles[key].close()#Tempfiles are deleted when closed
-				deletedKeys.append(key)
-			self.tempfiles[key].inUse = False
-		for key in deletedKeys:
-			del self.tempfiles[key]#Removing file from list
 #Helper method for placing surfaces on a larger surface
 def blitList(surface, sourceList):
         loc = [0, 0]

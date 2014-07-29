@@ -81,6 +81,7 @@ class Searcher(Thread):
 					mediaObjs.extend([entity for entity in tweet['entities']['media'] if entity['type'] == 'photo'])
 			for mediaObj in mediaObjs:
 				if mediaObj['media_url'] in self.tempfiles:
+					self.tempfiles[mediaObj['media_url']].inUse = True
 					continue
 				if 'thumb' in mediaObj['sizes']:
 					imgRequest = requests.get(mediaObj['media_url'] + ':thumb')
@@ -92,9 +93,11 @@ class Searcher(Thread):
 					temp = NamedTemporaryFile(prefix = mediaObj['media_url'].replace('/', ''))
 					temp.write(imgRequest.content)#Saves image in temp file so it only has to be downloaded once
 					temp.seek(0)#moves to start of file
+					temp.inUse = True
 					self.tempfiles[mediaObj['media_url']] = temp 
 			msg = json.dumps(tweets)
 			self.server.send(msg)
+			self.deleteUnusedTempfiles()
 			time.sleep(2)#Don't want the loop to run to often, or else you hit the twitter rate limit
 	#Helper method for assembling search query
 	def _getSearch(self):
@@ -110,3 +113,14 @@ class Searcher(Thread):
 			for word in self._excludedWordList:
                                 search += ' -' + word
                 return search
+	#Helper method to clear out images that aren't needed
+	def deleteUnusedTempfiles(self):
+		deletedKeys = []
+		tempList = iter(self.tempfiles)
+		for key in tempList:
+			if not self.tempfiles[key].inUse:
+				self.tempfiles[key].close()#Tempfiles are deleted when closed
+				deletedKeys.append(key)
+			self.tempfiles[key].inUse = False
+		for key in deletedKeys:
+			del self.tempfiles[key]#Removing file from list
