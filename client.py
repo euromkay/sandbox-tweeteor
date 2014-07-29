@@ -8,8 +8,7 @@ import pygame.freetype as font#You might have errors with this. If you do, you c
 import xml.sax.saxutils as xml
 import pygame, sys, json, threading, requests, logging
 
-logging.basicConfig(filename = 'client.log', level=logging.DEBUG, format='[%(levelname)s] (%(threadName)s) %(message)s')
-#Constants- DO NOT EDIT! change server.conf instead
+#Constants
 BORDER_WIDTH = 10
 BORDER_HEIGHT = 10
 white = pygame.Color(255, 255, 255, 255)
@@ -24,12 +23,12 @@ class Client(Thread):
                 self.textFont = font.SysFont('helvetica', 15)
 		self.tempfiles = {}#Image temp files
 		self.coords = self.x, self.y = coords
+		self.exit = exit
 		self.sock = socket()
 		self.sock.connect(address)
 		self.window = pygame.display.set_mode(json.loads(self.sock.recv(128))) #This represents the window belonging to the client
 		self.sock.send('ACK')
 		self.screen = pygame.Surface(json.loads(self.sock.recv(128))) #This represents the whole screen (all the clients' windows together)
-		self.exit = exit
 	def run(self):
 		while True:
 			#Exits if window was closed
@@ -38,7 +37,6 @@ class Client(Thread):
 				pygame.quit()
 				sys.exit()
 			msg = self.sock.recv(1024)
-			#Exits if server tells client to close. That makes two ways to close the client
 			length = int(msg)
 			self.sock.send('ACK') #Tells server that it got the length
 			s = self.sock.recv(2048)
@@ -150,6 +148,7 @@ def newTweetSurface(surfaceList):
         blitList(tweetSurface, surfaceList)#fill that surface
         return tweetSurface
 
+logging.basicConfig(filename = 'client.log', level=logging.DEBUG, format='[%(levelname)s] (%(threadName)s) %(message)s')
 config = SafeConfigParser()
 config.read('client.conf')
 address = (config.get('connection', 'address'), config.getint('connection', 'port'))

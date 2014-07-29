@@ -75,7 +75,7 @@ class Searcher(Thread):
                                 tweets = [ tweet for tweet in r.json()['statuses'] if 'retweeted_status' not in tweet]#No need for boring retweets
 			msg = json.dumps(tweets)
 			self.server.send(msg)
-			time.sleep(4)#Don't want the loop to run to often, or else you hit the twitter rate limit
+			time.sleep(2)#Don't want the loop to run to often, or else you hit the twitter rate limit
 	#Helper method for assembling search query
 	def _getSearch(self):
                 search = ''
