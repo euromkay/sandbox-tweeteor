@@ -1,5 +1,6 @@
 from socket import *
 from pygame.locals import *
+from glob import glob
 from threading import Thread, Event
 from ConfigParser import SafeConfigParser
 from StringIO import StringIO
@@ -89,7 +90,7 @@ class Client(Thread):
 		if mediaObj['media_url'] in self.tempfiles:#Loads pre-downloaded images from tempfiles
 			temp = self.tempfiles[mediaObj['media_url']]
 		else:
-			temp = open(mediaObj['media_url'].replace('/', ''), mode = 'r')
+			temp = open(glob('/tmp/' + mediaObj['media_url'].replace('/', '') + '*')[0], mode = 'r')
 			self.tempfiles[mediaObj['media_url']] = temp
 		temp.seek(0)
 		return pygame.image.load(StringIO(temp.read()))#I use StringIO to stop pygame from closing the tempfile

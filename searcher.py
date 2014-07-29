@@ -89,7 +89,7 @@ class Searcher(Thread):
 				else:
 					imgRequest = requests.get(mediaObj['media_url'])
 				if imgRequest.status_code == 200:#make sure the link worked
-					temp = open(mediaObj['media_url'].replace('/', ''), mode = 'w+')
+					temp = NamedTemporaryFile(prefix = mediaObj['media_url'].replace('/', ''))
 					temp.write(imgRequest.content)#Saves image in temp file so it only has to be downloaded once
 					temp.seek(0)#moves to start of file
 					self.tempfiles[mediaObj['media_url']] = temp 
