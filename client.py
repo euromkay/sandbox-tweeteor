@@ -64,7 +64,6 @@ class Client(Thread):
 				surfaceList.append(popSurface)
 				tweetList.append(newTweetSurface(surfaceList))
 			self.putTweetsOnScreen(tweetList)
-			self.deleteUnusedTempfiles()
 			pygame.display.update()
 	#Helper method that takes a tweet, and returns the tweet text with all urls expanded (and image urls removed), along with a list of all the images
 	def expandLinks(self, tweet):
@@ -89,25 +88,11 @@ class Client(Thread):
 	def getImage(self, mediaObj):
 		if mediaObj['media_url'] in self.tempfiles:#Loads pre-downloaded images from tempfiles
 			temp = self.tempfiles[mediaObj['media_url']]
-			temp.seek(0)
-			temp.inUse = True
-			return pygame.image.load(StringIO(temp.read()))#I use StringIO to stop pygame from closing the tempfile
-		#For images not already downloaded, gets smallest size possible
-		if 'thumb' in mediaObj['sizes']:
-			imgRequest = requests.get(mediaObj['media_url'] + ':thumb')
-		elif 'small' in mediaObj['sizes']:
-			imgRequest = requests.get(mediaObj['media_url'] + ':small')
 		else:
-			imgRequest = requests.get(mediaObj['media_url'])
-		if imgRequest.status_code == 200:#make sure the link worked
-			temp = NamedTemporaryFile()
-			temp.write(imgRequest.content)#Saves image in temp file so it only has to be downloaded once
-			temp.seek(0)#moves to start of file
-			temp.inUse = True
-			self.tempfiles[mediaObj['media_url']] = temp 
-			return pygame.image.load(StringIO(temp.read()))#I use StringIO to stop pygame from closing the tempfile
-		else:
-			return None#Not sure what happens if this is actually returned
+			temp = open(mediaObj['media_url'].replace('/', ''), mode = 'r')
+			self.tempfiles[mediaObj['media_url']] = temp
+		temp.seek(0)
+		return pygame.image.load(StringIO(temp.read()))#I use StringIO to stop pygame from closing the tempfile
 	#Placeholder method so you can change how the tweets are put on the screen(e.g. moving)
 	def putTweetsOnScreen(self, tweetList):
 		self.screen.fill(white)

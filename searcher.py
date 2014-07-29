@@ -1,5 +1,6 @@
 import requests, time, sys, json
 from threading import Thread, Lock, Event
+from tempfile import NamedTemporaryFile
 #Searches twitter based on user-set parameters, and makes a list of the tweets(dictionaries)
 class Searcher(Thread):
 	def __init__(self, credentials, server):
@@ -17,6 +18,7 @@ class Searcher(Thread):
 		self._searchLock = Lock()
 		self.server = server
 		self.exit = Event()
+		self.tempfiles = {}
 	def getUsers(self):
                 with self._searchLock:
                         return list(self._userList)
@@ -73,6 +75,24 @@ class Searcher(Thread):
                                 params = {'q': self._getSearch(), 'result_type': 'recent', 'lang': 'en', 'count': 100}#Check twitter API for all parameters
                                 r = requests.get('https://api.twitter.com/1.1/search/tweets.json', headers = self._headers, params = params)
                                 tweets = [ tweet for tweet in r.json()['statuses'] if 'retweeted_status' not in tweet]#No need for boring retweets
+			mediaObjs = []
+			for tweet in tweets:
+				if 'media' in tweet['entities']:
+					mediaObjs.extend([entity for entity in tweet['entities']['media'] if entity['type'] == 'photo'])
+			for mediaObj in mediaObjs:
+				if mediaObj['media_url'] in self.tempfiles:
+					continue
+				if 'thumb' in mediaObj['sizes']:
+					imgRequest = requests.get(mediaObj['media_url'] + ':thumb')
+				elif 'small' in mediaObj['sizes']:
+					imgRequest = requests.get(mediaObj['media_url'] + ':small')
+				else:
+					imgRequest = requests.get(mediaObj['media_url'])
+				if imgRequest.status_code == 200:#make sure the link worked
+					temp = open(mediaObj['media_url'].replace('/', ''), mode = 'w+')
+					temp.write(imgRequest.content)#Saves image in temp file so it only has to be downloaded once
+					temp.seek(0)#moves to start of file
+					self.tempfiles[mediaObj['media_url']] = temp 
 			msg = json.dumps(tweets)
 			self.server.send(msg)
 			time.sleep(2)#Don't want the loop to run to often, or else you hit the twitter rate limit
