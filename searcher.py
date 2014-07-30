@@ -1,7 +1,7 @@
-import requests, time, sys, json
+from base64 import b64encode
 from threading import Thread, Lock, Event
 from tempfile import NamedTemporaryFile
-import logging
+import requests, time, sys, json, logging
 #Searches twitter based on user-set parameters, and makes a list of the tweets(dictionaries)
 class Searcher(Thread):
 	def __init__(self, credentials, server):
@@ -102,7 +102,12 @@ class Searcher(Thread):
 					temp.inUse = True
 					self.tempfiles[mediaObj['media_url']] = temp 
 					logging.debug(mediaObj['media_url'] + ' saved')
-			msg = json.dumps(tweets)
+			imgs = {}
+			for key in self.tempfiles:
+				f = self.tempfiles[key]
+				f.seek(0)
+				imgs[key] = b64encode(f.read())
+			msg = json.dumps((tweets, imgs))
 			self.server.send(msg)
 			self.deleteUnusedTempfiles()
 			logging.debug('done with tempfiles')

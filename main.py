@@ -1,10 +1,10 @@
-import sys, logging
-from base64 import b64encode
 from controller import *
 from searcher import *
 from threading import Thread, Lock
 from socket import *
 from ConfigParser import SafeConfigParser
+from base64 import b64encode
+import sys, logging
 
 #Starts logger for debugger; not currently used, but I'm leaving it incase I need it later
 logging.basicConfig(filename = 'server.log', level=logging.DEBUG, format='[%(asctime)s : %(levelname)s] [%(threadName)s] %(message)s')

@@ -1,9 +1,9 @@
 from socket import *
 from pygame.locals import *
-from glob import glob
 from threading import Thread, Event
 from ConfigParser import SafeConfigParser
-from tempfile import NamedTemporaryFile
+from StringIO import StringIO
+from base64 import b64decode
 import pygame.freetype as font#You might have errors with this. If you do, you can change it to pygame.font, and change the calles to Font.render() a bit
 import xml.sax.saxutils as xml
 import pygame, sys, json, threading, logging
@@ -22,6 +22,7 @@ class Client(Thread):
                 self.nameFont = font.SysFont('helvetica', 20)#Helvetica is the closest to twitter's special font
                 self.textFont = font.SysFont('helvetica', 15)
 		self.coords = self.x, self.y = coords
+		self.imgs = {}
 		self.exit = exit
 		self.sock = socket()
 		self.sock.connect(address)
@@ -50,7 +51,7 @@ class Client(Thread):
 				exit.set()
 				return
 			self.window.fill(white)
-			tweets = json.loads(s)
+			tweets , self.imgs = json.loads(s)
 			tweetList = []#List of tweet surfaces, not tweets themselves
 			for tweet in tweets:#these are the actual tweets
 				surfaceList = []#surfaces that make up the tweet surface
@@ -86,15 +87,9 @@ class Client(Thread):
 		return text, imgList
         #Helper method for loading images
 	def getImage(self, mediaObj):
-		g = glob('/tmp/' + mediaObj['media_url'].replace('/', '') + '*')
-		if len(g) > 0:
-			temp = open(glob('/tmp/' + mediaObj['media_url'].replace('/', '') + '*')[0], mode = 'r')
-			logging.debug('accessed ' + mediaObj['media_url'])
-			temp.seek(0)
-			return pygame.image.load(temp)
-		else:
-			logging.debug(mediaObj['media_url'] + ' not found')
-			return pygame.Surface(0, 0)
+		s = self.imgs[mediaObj['media_url']]
+		f = StringIO(b64decode(s))
+		return pygame.image.load(f)
 	#Placeholder method so you can change how the tweets are put on the screen(e.g. moving)
 	def putTweetsOnScreen(self, tweetList):
 		self.screen.fill(white)
