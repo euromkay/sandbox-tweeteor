@@ -1,6 +1,7 @@
 import requests, time, sys, json
 from threading import Thread, Lock, Event
 from tempfile import NamedTemporaryFile
+import logging
 #Searches twitter based on user-set parameters, and makes a list of the tweets(dictionaries)
 class Searcher(Thread):
 	def __init__(self, credentials, server):
@@ -79,25 +80,32 @@ class Searcher(Thread):
 			for tweet in tweets:
 				if 'media' in tweet['entities']:
 					mediaObjs.extend([entity for entity in tweet['entities']['media'] if entity['type'] == 'photo'])
+			logging.debug('starting tempfile use')
 			for mediaObj in mediaObjs:
 				if mediaObj['media_url'] in self.tempfiles:
 					self.tempfiles[mediaObj['media_url']].inUse = True
+					logging.debug(mediaObj['media_url'] + ' already saved')
 					continue
 				if 'thumb' in mediaObj['sizes']:
 					imgRequest = requests.get(mediaObj['media_url'] + ':thumb')
+					logging.debug(mediaObj['media_url'] + ' dowloaded')
 				elif 'small' in mediaObj['sizes']:
 					imgRequest = requests.get(mediaObj['media_url'] + ':small')
+					logging.debug(mediaObj['media_url'] + ' dowloaded')
 				else:
 					imgRequest = requests.get(mediaObj['media_url'])
+					logging.debug(mediaObj['media_url'] + ' dowloaded')
 				if imgRequest.status_code == 200:#make sure the link worked
 					temp = NamedTemporaryFile(prefix = mediaObj['media_url'].replace('/', ''))
 					temp.write(imgRequest.content)#Saves image in temp file so it only has to be downloaded once
 					temp.seek(0)#moves to start of file
 					temp.inUse = True
 					self.tempfiles[mediaObj['media_url']] = temp 
+					logging.debug(mediaObj['media_url'] + ' saved')
 			msg = json.dumps(tweets)
 			self.server.send(msg)
 			self.deleteUnusedTempfiles()
+			logging.debug('done with tempfiles')
 			time.sleep(2)#Don't want the loop to run to often, or else you hit the twitter rate limit
 	#Helper method for assembling search query
 	def _getSearch(self):
@@ -121,6 +129,7 @@ class Searcher(Thread):
 			if not self.tempfiles[key].inUse:
 				self.tempfiles[key].close()#Tempfiles are deleted when closed
 				deletedKeys.append(key)
+				logging.debug('deleting ' + key)
 			self.tempfiles[key].inUse = False
 		for key in deletedKeys:
 			del self.tempfiles[key]#Removing file from list

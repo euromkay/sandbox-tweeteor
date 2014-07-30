@@ -21,7 +21,6 @@ class Client(Thread):
 		pygame.init()
                 self.nameFont = font.SysFont('helvetica', 20)#Helvetica is the closest to twitter's special font
                 self.textFont = font.SysFont('helvetica', 15)
-		self.tempfiles = {}#Image temp files
 		self.coords = self.x, self.y = coords
 		self.exit = exit
 		self.sock = socket()
@@ -29,6 +28,7 @@ class Client(Thread):
 		self.window = pygame.display.set_mode(json.loads(self.sock.recv(128))) #This represents the window belonging to the client
 		self.sock.send('ACK')
 		self.screen = pygame.Surface(json.loads(self.sock.recv(128))) #This represents the whole screen (all the clients' windows together)
+		self.sock.send('ACK')
 	def run(self):
 		while True:
 			#Exits if window was closed
@@ -86,13 +86,15 @@ class Client(Thread):
 		return text, imgList
         #Helper method for loading images
 	def getImage(self, mediaObj):
-		if mediaObj['media_url'] in self.tempfiles:#Loads pre-downloaded images from tempfiles
-			temp = self.tempfiles[mediaObj['media_url']]
-		else:
+		g = glob('/tmp/' + mediaObj['media_url'].replace('/', '') + '*')
+		if len(g) > 0:
 			temp = open(glob('/tmp/' + mediaObj['media_url'].replace('/', '') + '*')[0], mode = 'r')
-			self.tempfiles[mediaObj['media_url']] = temp
-		temp.seek(0)
-		return pygame.image.load(temp)
+			logging.debug('accessed ' + mediaObj['media_url'])
+			temp.seek(0)
+			return pygame.image.load(temp)
+		else:
+			logging.debug(mediaObj['media_url'] + ' not found')
+			return pygame.Surface(0, 0)
 	#Placeholder method so you can change how the tweets are put on the screen(e.g. moving)
 	def putTweetsOnScreen(self, tweetList):
 		self.screen.fill(white)
@@ -122,7 +124,7 @@ def newTweetSurface(surfaceList):
         blitList(tweetSurface, surfaceList)#fill that surface
         return tweetSurface
 
-logging.basicConfig(filename = 'client.log', level=logging.DEBUG, format='[%(levelname)s] (%(threadName)s) %(message)s')
+logging.basicConfig(filename = 'client.log', level=logging.DEBUG, format='[%(asctime)s : %(levelname)s] [%(threadName)s] %(message)s')
 config = SafeConfigParser()
 config.read('client.conf')
 address = (config.get('connection', 'address'), config.getint('connection', 'port'))

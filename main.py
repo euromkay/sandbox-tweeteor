@@ -7,7 +7,7 @@ from socket import *
 from ConfigParser import SafeConfigParser
 
 #Starts logger for debugger; not currently used, but I'm leaving it incase I need it later
-logging.basicConfig(filename = 'server.log', level=logging.DEBUG, format='[%(levelname)s] (%(threadName)s) %(message)s')
+logging.basicConfig(filename = 'server.log', level=logging.DEBUG, format='[%(asctime)s : %(levelname)s] [%(threadName)s] %(message)s')
 config = SafeConfigParser()
 config.read('server.conf')
 #Constants- DO NOT EDIT! change server.conf instead
@@ -53,6 +53,7 @@ class Server(Thread):
 			client.send(json.dumps(WIN_SIZE))
 			client.recv(3)
 			client.send(json.dumps(SCR_SIZE))
+			client.recv(3)
 			client.send(str(len(msg))) #The client can't recieve all the data in one go, so I have to tell it how much data to wait for
 			logging.debug('sending ' + str(len(msg)) + ' bytes')
 			client.recv(3)
