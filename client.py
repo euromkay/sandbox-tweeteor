@@ -3,6 +3,7 @@ from pygame.locals import *
 from threading import Thread, Event
 from ConfigParser import SafeConfigParser
 from StringIO import StringIO
+from tempfile import NamedTemporaryFile
 from base64 import b64decode
 import pygame.freetype as font#You might have errors with this. If you do, you can change it to pygame.font, and change the calles to Font.render() a bit
 import xml.sax.saxutils as xml
@@ -22,7 +23,7 @@ class Client(Thread):
                 self.nameFont = font.SysFont('helvetica', 20)#Helvetica is the closest to twitter's special font
                 self.textFont = font.SysFont('helvetica', 15)
 		self.coords = self.x, self.y = coords
-		self.imgs = {}
+		self.tempfiles = {}
 		self.exit = exit
 		self.sock = socket()
 		self.sock.connect(address)
@@ -52,7 +53,11 @@ class Client(Thread):
 				return
 			self.window.fill(white)
 			tweets , imgs = json.loads(s)
-			self.imgs.update(imgs)
+			for key in imgs:
+				if key not in self.tempfiles:
+					temp = NamedTemporaryFile(prefix = key.replace('/', ''))
+					temp.write(b64decode(imgs[key]))
+					self.tempfiles[key] = temp
 			tweetList = []#List of tweet surfaces, not tweets themselves
 			for tweet in tweets:#these are the actual tweets
 				surfaceList = []#surfaces that make up the tweet surface
@@ -88,15 +93,27 @@ class Client(Thread):
 		return text, imgList
         #Helper method for loading images
 	def getImage(self, mediaObj):
-		s = self.imgs[mediaObj['media_url']]
-		f = StringIO(b64decode(s))
-		return pygame.image.load(f)
+		f = self.tempfiles[mediaObj['media_url']]
+		f.inUse = True
+		f.seek(0)
+		return pygame.image.load(StringIO(f.read()))
 	#Placeholder method so you can change how the tweets are put on the screen(e.g. moving)
 	def putTweetsOnScreen(self, tweetList):
 		self.screen.fill(white)
 		blitList(self.screen, tweetList)
 		width, height = self.window.get_width(), self.window.get_height()
 		self.window.blit(self.screen, (0, 0), area = pygame.Rect(self.coords[0] * width, self.coords[1] * height, width, height))
+	def deleteUnusedTempfiles(self):
+		deletedKeys = []
+		with self.tempfileLock:
+			tempList = iter(self.tempfiles)
+			for key in tempList:
+				if not self.tempfiles[key].inUse:
+					self.tempfiles[key].close()#Tempfiles are deleted when closed
+					deletedKeys.append(key)
+				self.tempfiles[key].inUse = False
+			for key in deletedKeys:
+				del self.tempfiles[key]#Removing file from list
 #Helper method for placing surfaces on a larger surface
 def blitList(surface, sourceList):
         loc = [0, 0]
