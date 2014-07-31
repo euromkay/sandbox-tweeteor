@@ -36,6 +36,8 @@ class Client(Thread):
 			#Exits if window was closed
 			if exit.isSet():
 				self.sock.close()
+				for key in self.tempfiles:
+					self.tempfiles[key].close()
 				pygame.quit()
 				sys.exit()
 			msg = self.sock.recv(1024)
@@ -50,6 +52,8 @@ class Client(Thread):
 			if s == 'exit':
 				self.sock.close()
 				exit.set()
+				for key in self.tempfiles:
+					self.tempfiles[key].close()
 				return
 			self.window.fill(white)
 			tweets , imgs = json.loads(s)
@@ -71,6 +75,7 @@ class Client(Thread):
 				surfaceList.append(popSurface)
 				tweetList.append(newTweetSurface(surfaceList))
 			self.putTweetsOnScreen(tweetList)
+			self.deleteUnusedTempfiles()
 			pygame.display.update()
 	#Helper method that takes a tweet, and returns the tweet text with all urls expanded (and image urls removed), along with a list of all the images
 	def expandLinks(self, tweet):
@@ -105,15 +110,15 @@ class Client(Thread):
 		self.window.blit(self.screen, (0, 0), area = pygame.Rect(self.coords[0] * width, self.coords[1] * height, width, height))
 	def deleteUnusedTempfiles(self):
 		deletedKeys = []
-		with self.tempfileLock:
-			tempList = iter(self.tempfiles)
-			for key in tempList:
-				if not self.tempfiles[key].inUse:
-					self.tempfiles[key].close()#Tempfiles are deleted when closed
-					deletedKeys.append(key)
-				self.tempfiles[key].inUse = False
-			for key in deletedKeys:
-				del self.tempfiles[key]#Removing file from list
+		tempList = iter(self.tempfiles)
+		for key in tempList:
+			if not self.tempfiles[key].inUse:
+				self.tempfiles[key].close()#Tempfiles are deleted when closed
+				deletedKeys.append(key)
+			self.tempfiles[key].inUse = False
+		for key in deletedKeys:
+			self.tempfiles[key].close()
+			del self.tempfiles[key]#Removing file from list
 #Helper method for placing surfaces on a larger surface
 def blitList(surface, sourceList):
         loc = [0, 0]

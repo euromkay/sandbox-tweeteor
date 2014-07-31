@@ -73,6 +73,9 @@ class Searcher(Thread):
                 while True:
 			if self.exit.isSet():
 				self.server.send('exit')
+				with self.tempfileLock:
+					for key in self.tempfiles:
+						self.tempfiles[key].close()
 				return
                         search = self._getSearch()
                         if search == '':#Twitter returns an error for empty searches, so this is a way around it
@@ -136,6 +139,7 @@ class Searcher(Thread):
 					deletedKeys.append(key)
 				self.tempfiles[key].inUse = False
 			for key in deletedKeys:
+				self.tempfiles[key].close()
 				del self.tempfiles[key]#Removing file from list
 	def getWelcomeData(self):
 		with self.tweetLock:
