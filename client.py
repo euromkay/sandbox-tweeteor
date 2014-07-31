@@ -51,7 +51,8 @@ class Client(Thread):
 				exit.set()
 				return
 			self.window.fill(white)
-			tweets , self.imgs = json.loads(s)
+			tweets , imgs = json.loads(s)
+			self.imgs.update(imgs)
 			tweetList = []#List of tweet surfaces, not tweets themselves
 			for tweet in tweets:#these are the actual tweets
 				surfaceList = []#surfaces that make up the tweet surface
