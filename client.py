@@ -15,20 +15,20 @@ BORDER_HEIGHT = 10
 white = pygame.Color(255, 255, 255, 255)
 black = pygame.Color(0, 0, 0, 255)
 blue = pygame.Color(0, 0, 255, 255)
-twitter_bg_blue=pygame.Color(154, 194, 223)
-speechBubble=pygame.image.load('speech.png')
+twitter_bg_blue = pygame.Color(154, 194, 223)
+speechBubble = pygame.image.load('speech.png')
 
 ### For use by tweet surface method ###
 class Word():
 	def __init__(self,text):
-		self.text=text
-		ttext=text[0:1]
-		if ttext=='#' or ttext=='@':
-			self.color=blue
-		elif len(text)>4 and text[0:4]=='http':
-			self.color=blue
+		self.text = text
+		ttext = text[0:1]
+		if ttext == '#' or ttext == '@':
+			self.color = blue
+		elif len(text) > 4 and text[0:4] == 'http':
+			self.color = blue
 		else:
-			self.color=black
+			self.color = black
 
 class Client(Thread):
 	def __init__(self, address, coords, exit):
@@ -118,43 +118,43 @@ class Client(Thread):
 			del self.imgs[key]#Removing file from list
 	### New tweet surface generator ###
 	def getTweetSurface(self, tweet):
-		userImage=pygame.image.load(StringIO(urllib.urlopen(tweet['user']['profile_image_url']).read()))
-		userName=tweet['user']['name']
-		userScreenName=tweet['user']['screen_name']
-		tweetText,images=self.expandLinks(tweet)
-		words= [Word(word) for word in tweetText.split()]
-		tmpFont=font.SysFont('helvetica', 15)
+		print 'downloading profile pic'
+		userImage = pygame.image.load(StringIO(urllib.urlopen(tweet['user']['profile_image_url']).read()))
+		print 'done'
+		userName = tweet['user']['name']
+		userScreenName = tweet['user']['screen_name']
+		tweetText, images = self.expandLinks(tweet)
+		tweetText = tweetText.replace('\n',' ')
+		tweetText = tweetText.replace('amp;','')
+		words = [Word(word) for word in tweetText.split()]
+		tmpFont = font.SysFont('helvetica', 15)
 		if images:
-			coords1=(550,170)
-			coords2=(450,170)
-			coords3=[100,0]
-			lenInit=185
-			lenLast=385
+			coords1 = (550,170)
+			coords2 = (450,170)
+			coords3 = [100,0]
+			lenInit = 185
+			lenLast = 385
 		else:
-			coords1=(410,125)
-			coords2=(280,125)
-			coords3=[130,0]
-			lenInit=175
-			lenLast=405
-		tweetSurf=pygame.Surface(coords1)
+			coords1 = (410,125)
+			coords2 = (280,125)
+			coords3 = [130,0]
+			lenInit = 175
+			lenLast = 405
+		tweetSurf = pygame.Surface(coords1)
 		tweetSurf.fill(twitter_bg_blue)
 		tweetSurf.blit(pygame.transform.scale(speechBubble,coords2),coords3)
 		tweetSurf.blit(pygame.transform.scale(userImage,(70,70)),[15,30])
 		tweetSurf.blit(tmpFont.render(userName, black)[0],[5,10])
-		tweetSurf.blit(tmpFont.render('@'+userScreenName, black)[0],[5,105])
-		lengthSoFar=lenInit
-		heightCur=10
+		tweetSurf.blit(tmpFont.render('@' + userScreenName, black)[0],[5,105])
+		lengthSoFar = lenInit
+		heightCur = 10
 		for word in words:
-			while '\n' in word.text:
-				word.text=word.text.replace('\n','')
-			while '&amp;' in word.text:
-				word.text=word.text.replace('amp;','')
-			tmpTweetSurf=tmpFont.render(word.text+'  ', word.color)[0]
-			if lengthSoFar+tmpTweetSurf.get_width()>lenLast:
-				heightCur+=tmpTweetSurf.get_height()
-				lengthSoFar=lenInit
+			tmpTweetSurf = tmpFont.render(word.text + '  ', word.color)[0]
+			if lengthSoFar + tmpTweetSurf.get_width() > lenLast:
+				heightCur += tmpTweetSurf.get_height()
+				lengthSoFar = lenInit
 			tweetSurf.blit(tmpTweetSurf,[lengthSoFar,heightCur])
-			lengthSoFar+=tmpTweetSurf.get_width()
+			lengthSoFar += tmpTweetSurf.get_width()
 		for image in images:
 			tweetSurf.blit(pygame.transform.scale(image,(150,150)),[385,10])
 		return tweetSurf
