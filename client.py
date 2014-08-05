@@ -4,7 +4,7 @@ from threading import Thread, Event
 from ConfigParser import SafeConfigParser
 from StringIO import StringIO
 from base64 import b64decode
-import pygame.freetype as font#You might have errors with this. If you do, you can change it to pygame.font, and change the calles to Font.render() a bit
+import pygame.font as font#You might have errors with this. If you do, you can change it to pygame.font, and change the calles to Font.render() a bit
 import xml.sax.saxutils as xml
 import pygame, sys, json, threading, logging
 import urllib
@@ -35,7 +35,7 @@ class Client(Thread):
 		Thread.__init__(self, name = 'Client')
 		pygame.init()
                 self.nameFont = font.SysFont('helvetica', 20)#Helvetica is the closest to twitter's special font
-                self.textFont = font.SysFont('helvetica', 30)
+                self.textFont = font.SysFont('helvetica', config.getint('font', 'size'))
 		self.coords = self.x, self.y = coords
 		self.imgs = {} #All the images, represented as strings, indexed by url
 		self.imgInUse = {}
@@ -105,7 +105,7 @@ class Client(Thread):
 	#Placeholder method so you can change how the tweets are put on the screen(e.g. moving)
 	def putTweetsOnScreen(self, tweetList):
 		self.screen.fill(twitter_bg_blue)
-		blitList(self.screen, tweetList)
+		blitList(self.screen, tweetList, self.window.get_height())
 		width, height = self.window.get_width(), self.window.get_height()
 		self.window.blit(self.screen, (0, 0), area = pygame.Rect(self.coords[0] * width, self.coords[1] * height, width, height))
 	def deleteUnusedImages(self):
@@ -129,14 +129,14 @@ class Client(Thread):
 		surfList = []
 		imageSurf = pygame.transform.scale(userImage,(70,70))
 		surfList.append(imageSurf)
-		nameSurf = self.textFont.render('@' + userScreenName, black)[0]
+		nameSurf = self.textFont.render('@' + userScreenName, 1, black)
 		surfList.append(nameSurf)
 		contentList = []
 		for line in lines:
 			words = [Word(word) for word in line.split()]
 			wordSurfs = []
 			for word in words:
-				wordSurf = self.textFont.render(word.text + '  ', word.color)[0]
+				wordSurf = self.textFont.render(word.text + '  ', 1, word.color)
 				wordSurfs.append(wordSurf)
 			if wordSurfs == []:
 				continue
@@ -168,7 +168,7 @@ class Client(Thread):
 		return tweetSurf
 
 #Helper method for placing surfaces on a larger surface
-def blitList(surface, sourceList):
+def blitList(surface, sourceList, boundary = 0):
         loc = [0, 0]
         addedList = []#List of all surfaces in current column
         for source in sourceList:
@@ -178,6 +178,8 @@ def blitList(surface, sourceList):
                         addedList = []
 		if loc[0] + source.get_width() > surface.get_width():#Ignores surfaces too wide to fit in the surface, you don't want ugly half surfaces
 			continue
+		if boundary > 0 and (loc[1] + source.get_height()) / boundary != loc[1] / boundary:
+			loc[1] += boundary - loc[1] % boundary
                 surface.blit(source, loc)
                 loc[1] += source.get_height()#move down a "row"
                 addedList.append(source)
