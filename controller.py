@@ -8,6 +8,7 @@ class Controller(Thread):
 		self.searcher = searcher
 	def run(self):
 	    while True:
+		logging.debug("running")
 		print '''              1 - Add User
 		      2 - Remove User
 		      3 - Add Hashtag

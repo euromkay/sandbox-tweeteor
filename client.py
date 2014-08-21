@@ -48,13 +48,17 @@ class Client(Thread):
 		self.sock.send('ACK')
 	def run(self):
 		while True:
+			logging.debug("running")
 			#Exits if window was closed
 			if exit.isSet():
 				self.sock.close()
 				pygame.quit()
 				sys.exit()
 			msg = self.sock.recv(1024)
-			length = int(msg)
+			try:
+				length = int(msg)
+			except:
+				logging.debug(msg)
 			self.sock.send('ACK') #Tells server that it got the length
 			s = self.sock.recv(2048)
 			#Calls recv multiple times to get the entire message
@@ -118,17 +122,20 @@ class Client(Thread):
 			del self.imgs[key]#Removing file from list
 	### New tweet surface generator ###
 	def getTweetSurface(self, tweet):
-		print 'downloading profile pic'
-		userImage = pygame.image.load(StringIO(urllib.urlopen(tweet['user']['profile_image_url']).read()))
-		print 'done'
+		surfList = []
+		logging.debug('downloading profile pic')
+		try:
+			userImage = pygame.image.load(StringIO(urllib.urlopen(tweet['user']['profile_image_url']).read()))
+			imageSurf = pygame.transform.scale(userImage,(70,70))
+			surfList.append(imageSurf)
+		except:
+			logging.debug('failed to download profile pic!')
+		logging.debug('done')
 		userName = tweet['user']['name']
 		userScreenName = tweet['user']['screen_name']
 		tweetText, images = self.expandLinks(tweet)
 		tweetText = unicode(xml.unescape(tweetText))
 		lines = tweetText.split('\n')
-		surfList = []
-		imageSurf = pygame.transform.scale(userImage,(70,70))
-		surfList.append(imageSurf)
 		nameSurf = self.textFont.render('@' + userScreenName, 1, black)
 		surfList.append(nameSurf)
 		contentList = []
@@ -136,8 +143,11 @@ class Client(Thread):
 			words = [Word(word) for word in line.split()]
 			wordSurfs = []
 			for word in words:
-				wordSurf = self.textFont.render(word.text + '  ', 1, word.color)
-				wordSurfs.append(wordSurf)
+				try:
+					wordSurf = self.textFont.render(word.text + '  ', 1, word.color)
+					wordSurfs.append(wordSurf)
+				except:
+					logging.debug(word.text)
 			if wordSurfs == []:
 				continue
 			width = sum([wordSurf.get_width() for wordSurf in wordSurfs])

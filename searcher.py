@@ -71,6 +71,7 @@ class Searcher(Thread):
 	def run(self):
 		self.server.start()
                 while True:
+			logging.debug("running")
 			if self.exit.isSet():
 				self.server.send('exit')
 				with self.tempfileLock:
@@ -83,7 +84,10 @@ class Searcher(Thread):
                         else:
                                 params = {'q': self._getSearch(), 'result_type': 'recent', 'lang': 'en', 'count': 100}#Check twitter API for all parameters
                                 r = requests.get('https://api.twitter.com/1.1/search/tweets.json', headers = self._headers, params = params)
-                                tweets = [ tweet for tweet in r.json()['statuses'] if 'retweeted_status' not in tweet]#No need for boring retweets
+				try:
+					tweets = [ tweet for tweet in r.json()['statuses'] if 'retweeted_status' not in tweet]#No need for boring retweets
+				except:
+					logging.debug(r.text)
 			with self.tweetLock:
 				self.tweets = tweets
 			mediaObjs = []

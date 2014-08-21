@@ -25,6 +25,7 @@ class Server(Thread):
 		self.setDaemon(True)
 	def run(self):
 		while True:
+			logging.debug("running")
 			(client, clAddr) = self.sock.accept()
 			self.addClient(client)
 	def send(self, msg):
