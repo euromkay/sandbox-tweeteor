@@ -7,4 +7,5 @@ All files except client.py and client.conf go on the server, while only client.p
 To start the program, run main.py on the server, then run client.py on the client(s). 
 To change the port and address used for communication, edit server.conf and client.conf.
 To change the size and number of windows, edit server.conf.
-When you install Tweeteor on the actual Meteor cluster, change auto to True in client.conf/coordinates, and set the correct x and y coordinates for the window.
+To change font size, edit client.conf.
+Because all the clients share a filesystem, the autocoordinate system does not work. Leave the setting as false.
