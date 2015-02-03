@@ -34,6 +34,7 @@ class Client(Thread):
 	def __init__(self, address, coords, exit):
 		Thread.__init__(self, name = 'Client')
 		pygame.init()
+                pygame.display.set_caption(str(coords[0]) + "-" + str(coords[1]))
                 self.nameFont = font.SysFont('helvetica', 20)#Helvetica is the closest to twitter's special font
                 self.textFont = font.SysFont('helvetica', config.getint('font', 'size'))
 		self.coords = self.x, self.y = coords
@@ -202,7 +203,7 @@ address = (config.get('connection', 'address'), config.getint('connection', 'por
 if config.getboolean('coordinates', 'auto'):
 	coords = (config.getint('coordinates', 'x'), config.getint('coordinates', 'y'))
 else:
-	coords = (int(raw_input('X: ')), int(raw_input('Y: ')))
+	coords = (int(sys.argv[1]), int(sys.argv[2]))
 exit = Event() #Event for coordinating shutdown
 client = Client(address, coords, exit)
 client.start()
