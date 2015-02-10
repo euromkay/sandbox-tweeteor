@@ -4,7 +4,6 @@ from threading import Thread, Event
 from ConfigParser import SafeConfigParser
 from StringIO import StringIO
 from base64 import b64decode
-import pygame.font as font#You might have errors with this. If you do, you can change it to pygame.font, and change the calles to Font.render() a bit
 import xml.sax.saxutils as xml
 import pygame, sys, json, threading, logging
 import urllib
@@ -18,25 +17,11 @@ blue = pygame.Color(0, 0, 255, 255)
 twitter_bg_blue = pygame.Color(154, 194, 223)
 speechBubble = pygame.image.load('speech.png')
 
-### For use by tweet surface method ###
-class Word():
-	def __init__(self,text):
-		self.text = text
-		ttext = text[0:1]
-		if ttext == '#' or ttext == '@':
-			self.color = blue
-		elif len(text) > 4 and text[0:4] == 'http':
-			self.color = blue
-		else:
-			self.color = black
-
 class Client(Thread):
 	def __init__(self, address, coords, exit):
 		Thread.__init__(self, name = 'Client')
 		pygame.init()
                 pygame.display.set_caption(str(coords[0]) + "-" + str(coords[1]))
-                self.nameFont = font.SysFont('helvetica', 20)#Helvetica is the closest to twitter's special font
-                self.textFont = font.SysFont('helvetica', config.getint('font', 'size'))
 		self.coords = self.x, self.y = coords
 		self.imgs = {} #All the images, represented as strings, indexed by url
 		self.imgInUse = {}
@@ -82,25 +67,6 @@ class Client(Thread):
 			self.putTweetsOnScreen(tweetList)
 			self.deleteUnusedImages()
 			pygame.display.update()
-	#Helper method that takes a tweet, and returns the tweet text with all urls expanded (and image urls removed), along with a list of all the images
-	def expandLinks(self, tweet):
-		text = tweet['text']
-		imgList = []
-		entities = []#List of all urls and media urls in tweet
-		if 'urls' in tweet['entities']:#adds urls to entities
-			entities.extend([(entity, 'url') for entity in tweet['entities']['urls']])
-		if 'media' in tweet['entities']:#adds mediau urls to entities
-			for entity in tweet['entities']['media']:
-				entities.append((entity, 'media'))
-				if entity['type'] == 'photo':
-					imgList.append(self.getImage(entity))
-		entities = reversed(sorted(entities, key = lambda (entity, eType): entity['indices']))
-		for (entity, eType) in entities:#Removes media urls, and lengthens normal urls
-			if eType == 'url':
-				text = text[0:entity['indices'][0]] + entity['expanded_url'] + text[entity['indices'][1]:]
-			if eType == 'media':
-				text = text[0:entity['indices'][0]] + text[entity['indices'][1]:]
-		return text, imgList
         #Helper method for loading images
 	def getImage(self, mediaObj):
 		s = self.imgs[mediaObj['media_url']]
@@ -121,62 +87,6 @@ class Client(Thread):
 			self.imgInUse[key]= False
 		for key in deletedKeys:
 			del self.imgs[key]#Removing file from list
-	### New tweet surface generator ###
-	def getTweetSurface(self, tweet):
-		surfList = []
-		logging.debug('downloading profile pic')
-		try:
-			userImage = pygame.image.load(StringIO(urllib.urlopen(tweet['user']['profile_image_url']).read()))
-			imageSurf = pygame.transform.scale(userImage,(70,70))
-			surfList.append(imageSurf)
-		except:
-			logging.debug('failed to download profile pic!')
-		logging.debug('done')
-		userName = tweet['user']['name']
-		userScreenName = tweet['user']['screen_name']
-		tweetText, images = self.expandLinks(tweet)
-		tweetText = unicode(xml.unescape(tweetText))
-		lines = tweetText.split('\n')
-		nameSurf = self.textFont.render('@' + userScreenName, 1, black)
-		surfList.append(nameSurf)
-		contentList = []
-		for line in lines:
-			words = [Word(word) for word in line.split()]
-			wordSurfs = []
-			for word in words:
-				try:
-					wordSurf = self.textFont.render(word.text + '  ', 1, word.color)
-					wordSurfs.append(wordSurf)
-				except:
-					logging.debug(word.text)
-			if wordSurfs == []:
-				continue
-			width = sum([wordSurf.get_width() for wordSurf in wordSurfs])
-			height = max([wordSurf.get_height() for wordSurf in wordSurfs])
-			lineSurf = pygame.Surface((width, height))
-			lineSurf.fill(twitter_bg_blue)
-			blitList(lineSurf, wordSurfs)
-			contentList.append(lineSurf)
-		contentList.extend(images)
-		width = max([x.get_width() for x in contentList])
-		height = sum([x.get_height() for x in contentList])
-		contentSurf = pygame.Surface((width, height))
-		contentSurf.fill(twitter_bg_blue)
-		blitList(contentSurf, contentList)
-		tailLength = width / 5
-		width += BORDER_WIDTH + tailLength
-		height += 2* BORDER_HEIGHT
-		bubbleSurf = pygame.Surface((width, height))
-		bubbleSurf.fill(twitter_bg_blue)
-		bubbleSurf.blit(pygame.transform.scale(speechBubble,(width, height)),[0, 0])
-		bubbleSurf.blit(contentSurf, [tailLength, BORDER_HEIGHT])
-		surfList.append(bubbleSurf)
-		width = max([x.get_width() for x in surfList])
-		height = sum([x.get_height() for x in surfList])
-		tweetSurf = pygame.Surface((width, height))
-		tweetSurf.fill(twitter_bg_blue)
-		blitList(tweetSurf, surfList)
-		return tweetSurf
 
 #Helper method for placing surfaces on a larger surface
 def blitList(surface, sourceList, boundary = 0):
