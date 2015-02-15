@@ -6,7 +6,6 @@ from threading import Thread, Event
 from ConfigParser import SafeConfigParser
 from StringIO import StringIO
 from base64 import b64decode
-import xml.sax.saxutils as xml
 import pygame, sys, json, threading, logging
 import urllib
 

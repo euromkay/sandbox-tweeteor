@@ -86,10 +86,10 @@ class Searcher(Thread):
                         else:
                             params = {'q': self.getSearch(), 'result_type': 'recent', 'lang': 'en', 'count': 100, 'since_id': lastID}#Check twitter API for all parameters
                             r = requests.get('https://api.twitter.com/1.1/search/tweets.json', headers = self.headers, params = params)
-                            try:
-                                    tweets = [Tweet(tweet) for tweet in r.json()['statuses'] if 'retweeted_status' not in tweet]#No need for boring retweets
-                            except:
-                                    logging.debug(r.text)
+                            #try:
+                            tweets = [Tweet(tweet) for tweet in r.json()['statuses'] if 'retweeted_status' not in tweet]#No need for boring retweets
+                            #except:
+                            #        logging.debug(r.text)
                         mediaObjs = []
                         imgs = {}
                         with self.tweetLock:
@@ -159,4 +159,4 @@ class Searcher(Thread):
                                 f = self.tempfiles[key]
                                 f.seek(0)
                                 imgs[key] = b64encode(f.read())
-                return json.dumps((tweets, imgs))
+                return json.dumps(([tweet.__dict__ for tweet in tweets], imgs))

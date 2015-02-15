@@ -2,6 +2,7 @@ import urllib
 from ConfigParser import SafeConfigParser
 from blitList import *
 import pygame, sys, json, threading, logging
+import xml.sax.saxutils as xml
 import pygame.font as font#You might have errors with this. If you do, you can change it to pygame.font, and change the calles to Font.render() a bit
 from StringIO import StringIO
 
@@ -11,6 +12,15 @@ config.read('client.conf')
 font.init()
 nameFont = font.SysFont('helvetica', 20)#Helvetica is the closest to twitter's special font
 textFont = font.SysFont('helvetica', config.getint('font', 'size'))
+
+BORDER_WIDTH = 20
+BORDER_HEIGHT = 20
+white = pygame.Color(255, 255, 255, 255)
+black = pygame.Color(0, 0, 0, 255)
+blue = pygame.Color(0, 0, 255, 255)
+twitter_bg_blue = pygame.Color(154, 194, 223)
+speechBubble = pygame.image.load('speech.png')
+
 class Tweet():
     def __init__(self, json):
         self.json = json
@@ -38,7 +48,7 @@ class Tweet():
             return unicode(xml.unescape(text)), imgList
 
     ### New tweet surface generator ###
-    def getTweetSurface(self):
+    def getSurface(self):
             surfList = []
             logging.debug('downloading profile pic')
             try:
@@ -104,6 +114,6 @@ class Word():
 			self.color = black
 
 def decodeTweet(dictionary):
-    if json in dictionary:
-        return Tweet(json)
+    if 'json' in dictionary:
+        return Tweet(dictionary['json'])
     return dictionary
