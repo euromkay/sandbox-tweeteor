@@ -22,11 +22,18 @@ twitter_bg_blue = pygame.Color(154, 194, 223)
 speechBubble = pygame.image.load('speech.png')
 
 class Tweet():
-    def __init__(self, json):
+    def __init__(self, json, height = -1, width = -1):
         self.json = json
         self.id = self.json['id']
         self.text, self.imgs = self._expandLinks()
-
+        if height >= 0 and width >= 0:
+            self.height = height
+            self.width = width
+        else:
+            tweetSurface = self.getSurface()
+            self.height = tweetSurface.get_height()
+            self.width = tweetSurface.get_width()
+    
     #Helper method that takes a tweet, and returns the tweet text with all urls expanded (and image urls removed), along with a list of all the images
     def _expandLinks(self):
             text = self.json['text']
@@ -115,5 +122,5 @@ class Word():
 
 def decodeTweet(dictionary):
     if 'json' in dictionary:
-        return Tweet(dictionary['json'])
+        return Tweet(dictionary['json'], dictionary['height'], dictionary['width']) 
     return dictionary
