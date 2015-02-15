@@ -1,4 +1,5 @@
 from server import *
+from tweet import *
 from base64 import b64encode
 from threading import Thread, Lock, Event
 from tempfile import NamedTemporaryFile
@@ -85,20 +86,19 @@ class Searcher(Thread):
                         else:
                             params = {'q': self.getSearch(), 'result_type': 'recent', 'lang': 'en', 'count': 100, 'since_id': lastID}#Check twitter API for all parameters
                             r = requests.get('https://api.twitter.com/1.1/search/tweets.json', headers = self.headers, params = params)
-                            try:
-                                    tweets = [ tweet for tweet in r.json()['statuses'] if 'retweeted_status' not in tweet]#No need for boring retweets
-                            except:
-                                    logging.debug(r.text)
+                            #try:
+                            tweets = [Tweet(tweet) for tweet in r.json()['statuses'] if 'retweeted_status' not in tweet]#No need for boring retweets
+                            #except:
+                            #        logging.debug(r.text)
                         mediaObjs = []
                         imgs = {}
                         with self.tweetLock:
                                 tweets.extend(self.tweets)
                                 self.tweets = tweets
                                 if len(self.tweets) > 0:
-                                    lastID = self.tweets[0]['id']
+                                    lastID = self.tweets[0].id
                                 for tweet in self.tweets:
-                                    if 'media' in tweet['entities']:
-                                        mediaObjs.extend([entity for entity in tweet['entities']['media'] if entity['type'] == 'photo'])
+                                    mediaObjs.extend(tweet.imgs)
                         with self.tempfileLock:
                                 for mediaObj in mediaObjs:
                                         key = mediaObj['media_url']
@@ -119,7 +119,7 @@ class Searcher(Thread):
                                                 temp.inUse = True
                                                 self.tempfiles[key] = temp 
                         with self.tweetLock:
-                            msg = json.dumps((self.tweets, imgs))
+                            msg = json.dumps(([tweet.__dict__ for tweet in self.tweets], imgs))
                         self.server.send(msg)
                         self.deleteUnusedTempfiles()
                         time.sleep(2)#Don't want the loop to run to often, or else you hit the twitter rate limit
@@ -159,4 +159,4 @@ class Searcher(Thread):
                                 f = self.tempfiles[key]
                                 f.seek(0)
                                 imgs[key] = b64encode(f.read())
-                return json.dumps((tweets, imgs))
+                return json.dumps(([tweet.__dict__ for tweet in tweets], imgs))
