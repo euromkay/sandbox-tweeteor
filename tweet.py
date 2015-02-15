@@ -1,26 +1,31 @@
-
 import urllib
+from ConfigParser import SafeConfigParser
+from blitList import *
 import pygame, sys, json, threading, logging
 import pygame.font as font#You might have errors with this. If you do, you can change it to pygame.font, and change the calles to Font.render() a bit
 from StringIO import StringIO
 
+logging.basicConfig(filename = 'client.log', level=logging.DEBUG, format='[%(asctime)s : %(levelname)s] [%(threadName)s] %(message)s')
+config = SafeConfigParser()
+config.read('client.conf')
+font.init()
 nameFont = font.SysFont('helvetica', 20)#Helvetica is the closest to twitter's special font
 textFont = font.SysFont('helvetica', config.getint('font', 'size'))
 class Tweet():
     def __init__(self, json):
         self.json = json
-        self.text, self.imgs = self._expandLinks(json)
-        self.surface = self._getTweetSurface()
+        self.id = self.json['id']
+        self.text, self.imgs = self._expandLinks()
 
     #Helper method that takes a tweet, and returns the tweet text with all urls expanded (and image urls removed), along with a list of all the images
-    def _expandLinks(self, json):
-            text = json['text']
+    def _expandLinks(self):
+            text = self.json['text']
             imgList = []
             entities = []#List of all urls and media urls in tweet
-            if 'urls' in json['entities']:#adds urls to entities
-                    entities.extend([(entity, 'url') for entity in json['entities']['urls']])
-            if 'media' in json['entities']:#adds mediau urls to entities
-                    for entity in json['entities']['media']:
+            if 'urls' in self.json['entities']:#adds urls to entities
+                    entities.extend([(entity, 'url') for entity in self.json['entities']['urls']])
+            if 'media' in self.json['entities']:#adds mediau urls to entities
+                    for entity in self.json['entities']['media']:
                             entities.append((entity, 'media'))
                             if entity['type'] == 'photo':
                                     imgList.append(entity)
@@ -33,7 +38,7 @@ class Tweet():
             return unicode(xml.unescape(text)), imgList
 
     ### New tweet surface generator ###
-    def _getTweetSurface(self):
+    def getTweetSurface(self):
             surfList = []
             logging.debug('downloading profile pic')
             try:
@@ -97,3 +102,8 @@ class Word():
 			self.color = blue
 		else:
 			self.color = black
+
+def decodeTweet(dictionary):
+    if json in dictionary:
+        return Tweet(json)
+    return dictionary

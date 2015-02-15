@@ -1,4 +1,6 @@
 from socket import *
+from tweet import *
+from blitList import *
 from pygame.locals import *
 from threading import Thread, Event
 from ConfigParser import SafeConfigParser
@@ -57,13 +59,13 @@ class Client(Thread):
 				exit.set()
 				return
 			self.window.fill(white)
-			tweets , imgs = json.loads(s)
+			tweets , imgs = json.loads(s, object_hook = decodeTweet)
 			for key in imgs:
 				imgs[key] = b64decode(imgs[key])
 			self.imgs.update(imgs)
 			tweetList = []#List of tweet surfaces, not tweets themselves
 			for tweet in tweets:#these are the actual tweets
-				tweetList.append(self.getTweetSurface(tweet))
+				tweetList.append(tweet.getSurface())
 			self.putTweetsOnScreen(tweetList)
 			self.deleteUnusedImages()
 			pygame.display.update()
@@ -87,23 +89,6 @@ class Client(Thread):
 			self.imgInUse[key]= False
 		for key in deletedKeys:
 			del self.imgs[key]#Removing file from list
-
-#Helper method for placing surfaces on a larger surface
-def blitList(surface, sourceList, boundary = 0):
-        loc = [0, 0]
-        addedList = []#List of all surfaces in current column
-        for source in sourceList:
-                if loc[1] + source.get_height() > surface.get_height():#Starts new column if surfaces reach bottom of the destination surface
-                        loc[1] = 0
-                        loc[0] += max([s.get_width() for s in addedList])#Only make the columns as wide as needed
-                        addedList = []
-		if loc[0] + source.get_width() > surface.get_width():#Ignores surfaces too wide to fit in the surface, you don't want ugly half surfaces
-			continue
-		if boundary > 0 and (loc[1] + source.get_height()) / boundary != loc[1] / boundary:
-			loc[1] += boundary - loc[1] % boundary
-                surface.blit(source, loc)
-                loc[1] += source.get_height()#move down a "row"
-                addedList.append(source)
 
 logging.basicConfig(filename = 'client.log', level=logging.DEBUG, format='[%(asctime)s : %(levelname)s] [%(threadName)s] %(message)s')
 config = SafeConfigParser()
