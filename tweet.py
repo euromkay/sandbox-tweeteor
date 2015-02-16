@@ -31,6 +31,9 @@ class Tweet():
             self.height = tweetSurface.get_height()
             self.width = tweetSurface.get_width()
         self.rect = pygame.Rect(0, 0, width, height)
+        
+    def get_rect(self):
+        return self.rect
     
     #Helper method that takes a tweet, and returns the tweet text with all urls expanded (and image urls removed), along with a list of all the images
     def _expandLinks(self):
