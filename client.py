@@ -57,15 +57,11 @@ class Client(Thread):
 				self.sock.close()
 				exit.set()
 				return
-			self.window.fill(white)
 			tweets , imgs = json.loads(s, object_hook = decodeObject)
 			for key in imgs:
 				imgs[key] = b64decode(imgs[key])
 			self.imgs.update(imgs)
-			tweetList = []#List of tweet surfaces, not tweets themselves
-			for tweet in tweets:#these are the actual tweets
-				tweetList.append(tweet.getSurface())
-			self.putTweetsOnScreen(tweetList)
+			self.putTweetsOnScreen(tweets)
 			#self.deleteUnusedImages()
 			pygame.display.update()
         #Helper method for loading images
@@ -76,10 +72,15 @@ class Client(Thread):
 		return pygame.image.load(f)
 	#Placeholder method so you can change how the tweets are put on the screen(e.g. moving)
 	def putTweetsOnScreen(self, tweetList):
-		self.screen.fill(twitter_bg_blue)
-		blitList(self.screen, tweetList, self.window.get_height())
+		self.window.fill(twitter_bg_blue)
+                tweetList = positionRectangles(self.screen, tweetList) 
 		width, height = self.window.get_width(), self.window.get_height()
-		self.window.blit(self.screen, (0, 0), area = pygame.Rect(self.coords[0] * width, self.coords[1] * height, width, height))
+                area = pygame.Rect(self.coords[0] * width, self.coords[1] * height, width, height)
+                for (tweet, rect) in tweetList:
+                    if rect.colliderect(area):
+                        rect.x -= area.x
+                        rect.y -= area.y
+                        self.window.blit(tweet.getSurface(), rect)
 	def deleteUnusedImages(self):
 		deletedKeys = []
 		for key in self.imgs:
