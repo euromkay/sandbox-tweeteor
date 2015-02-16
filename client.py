@@ -1,6 +1,6 @@
 from socket import *
 from tweet import *
-from blitList import *
+from rectangleHandler import *
 from pygame.locals import *
 from threading import Thread, Event
 from ConfigParser import SafeConfigParser
@@ -58,7 +58,7 @@ class Client(Thread):
 				exit.set()
 				return
 			self.window.fill(white)
-			tweets , imgs = json.loads(s, object_hook = decodeTweet)
+			tweets , imgs = json.loads(s, object_hook = decodeObject)
 			for key in imgs:
 				imgs[key] = b64decode(imgs[key])
 			self.imgs.update(imgs)
@@ -66,7 +66,7 @@ class Client(Thread):
 			for tweet in tweets:#these are the actual tweets
 				tweetList.append(tweet.getSurface())
 			self.putTweetsOnScreen(tweetList)
-			self.deleteUnusedImages()
+			#self.deleteUnusedImages()
 			pygame.display.update()
         #Helper method for loading images
 	def getImage(self, mediaObj):

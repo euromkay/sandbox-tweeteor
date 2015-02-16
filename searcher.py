@@ -3,7 +3,10 @@ from tweet import *
 from base64 import b64encode
 from threading import Thread, Lock, Event
 from tempfile import NamedTemporaryFile
+from rectangleHandler import RectangleEncoder
 import requests, time, sys, json, logging
+
+encoder = RectangleEncoder()
 #Searches twitter based on user-set parameters, and makes a list of the tweets(dictionaries)
 class Searcher(Thread):
         def __init__(self, credentials, address):
@@ -119,7 +122,7 @@ class Searcher(Thread):
                                                 temp.inUse = True
                                                 self.tempfiles[key] = temp 
                         with self.tweetLock:
-                            msg = json.dumps(([tweet.__dict__ for tweet in self.tweets], imgs))
+                            msg = encoder.encode((self.tweets, imgs))
                         self.server.send(msg)
                         self.deleteUnusedTempfiles()
                         time.sleep(2)#Don't want the loop to run to often, or else you hit the twitter rate limit
@@ -159,4 +162,4 @@ class Searcher(Thread):
                                 f = self.tempfiles[key]
                                 f.seek(0)
                                 imgs[key] = b64encode(f.read())
-                return json.dumps(([tweet.__dict__ for tweet in tweets], imgs))
+                return encoder.encode((tweets, imgs))

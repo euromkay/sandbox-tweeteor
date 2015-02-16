@@ -1,6 +1,6 @@
 import urllib
 from ConfigParser import SafeConfigParser
-from blitList import *
+from rectangleHandler import *
 import pygame, sys, json, threading, logging
 import xml.sax.saxutils as xml
 import pygame.font as font#You might have errors with this. If you do, you can change it to pygame.font, and change the calles to Font.render() a bit
@@ -26,13 +26,11 @@ class Tweet():
         self.json = json
         self.id = self.json['id']
         self.text, self.imgs = self._expandLinks()
-        if height >= 0 and width >= 0:
-            self.height = height
-            self.width = width
-        else:
+        if height < 0 and width < 0:
             tweetSurface = self.getSurface()
             self.height = tweetSurface.get_height()
             self.width = tweetSurface.get_width()
+        self.rect = pygame.Rect(0, 0, width, height)
     
     #Helper method that takes a tweet, and returns the tweet text with all urls expanded (and image urls removed), along with a list of all the images
     def _expandLinks(self):
@@ -88,7 +86,8 @@ class Tweet():
                     lineSurf.fill(twitter_bg_blue)
                     blitList(lineSurf, wordSurfs)
                     contentList.append(lineSurf)
-            contentList.extend(self.imgs)
+            #Temporarily ignoring images- must fix!
+            #contentList.extend(self.imgs)
             width = max([x.get_width() for x in contentList])
             height = sum([x.get_height() for x in contentList])
             contentSurf = pygame.Surface((width, height))
@@ -119,8 +118,3 @@ class Word():
 			self.color = blue
 		else:
 			self.color = black
-
-def decodeTweet(dictionary):
-    if 'json' in dictionary:
-        return Tweet(dictionary['json'], dictionary['height'], dictionary['width']) 
-    return dictionary
