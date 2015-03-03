@@ -24,6 +24,8 @@ def positionRectangles(surface, sourceList, boundary = 0):
                 rect.y = y
                 y += rect.height#move down a "row"
                 addedList.append(rect)
+                if hasattr(source, 'rect'):
+                    source.rect = rect
                 sources.append((source, rect))
         return sources
 
@@ -44,7 +46,7 @@ class RectangleEncoder(json.JSONEncoder):
 def decodeObject(dictionary):
     if 'class' in dictionary:
         if dictionary['class'] == 'Tweet':
-            return tweet.Tweet(dictionary['json'], dictionary['height'], dictionary['width']) 
+            return tweet.Tweet(dictionary['json'], decodeObject(dictionary['rect'])) 
         if dictionary['class'] == 'Rect':
             return pygame.Rect(dictionary['left'], dictionary['top'], dictionary['width'], dictionary['height']) 
     return dictionary

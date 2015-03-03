@@ -3,10 +3,16 @@ from tweet import *
 from base64 import b64encode
 from threading import Thread, Lock, Event
 from tempfile import NamedTemporaryFile
-from rectangleHandler import RectangleEncoder
+from rectangleHandler import *
 import requests, time, sys, json, logging
 
 encoder = RectangleEncoder()
+config = SafeConfigParser()
+config.read('server.conf')
+WIN_SIZE = WIN_WIDTH, WIN_HEIGHT = config.getint('window', 'width'), config.getint('window', 'height')
+WIN_PER_ROW = config.getint('window', 'win_per_row')
+WIN_PER_COLUMN = config.getint('window', 'win_per_col')
+SCR_SIZE = SCR_WIDTH, SCR_HEIGHT = WIN_WIDTH * WIN_PER_ROW, WIN_HEIGHT * WIN_PER_COLUMN
 #Searches twitter based on user-set parameters, and makes a list of the tweets(dictionaries)
 class Searcher(Thread):
         def __init__(self, credentials, address):
@@ -23,6 +29,7 @@ class Searcher(Thread):
             self.excludedUserList = []
             self.searchLock = Lock()
             self.server = Server(address, self)
+            self.screen = pygame.Surface(SCR_SIZE)
             self.exit = Event()
             self.tweets = []
             self.tweetLock = Lock()
@@ -97,7 +104,7 @@ class Searcher(Thread):
                         imgs = {}
                         with self.tweetLock:
                                 tweets.extend(self.tweets)
-                                self.tweets = tweets
+                                self.tweets = [tweet for (tweet, rectangle) in positionRectangles(self.screen, tweets)]
                                 if len(self.tweets) > 0:
                                     lastID = self.tweets[0].id
                                 for tweet in self.tweets:

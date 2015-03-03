@@ -73,14 +73,13 @@ class Client(Thread):
 	#Placeholder method so you can change how the tweets are put on the screen(e.g. moving)
 	def putTweetsOnScreen(self, tweetList):
 		self.window.fill(twitter_bg_blue)
-                tweetList = positionRectangles(self.screen, tweetList) 
 		width, height = self.window.get_width(), self.window.get_height()
                 area = pygame.Rect(self.coords[0] * width, self.coords[1] * height, width, height)
-                for (tweet, rect) in tweetList:
-                    if rect.colliderect(area):
-                        rect.x -= area.x
-                        rect.y -= area.y
-                        self.window.blit(tweet.getSurface(), rect)
+                for tweet in tweetList:
+                    if tweet.rect.colliderect(area):
+                        tweet.rect.x -= area.x
+                        tweet.rect.y -= area.y
+                        self.window.blit(tweet.getSurface(), tweet.rect)
 	def deleteUnusedImages(self):
 		deletedKeys = []
 		for key in self.imgs:
