@@ -100,13 +100,15 @@ class Searcher(Thread):
                             tweets = [Tweet(tweet) for tweet in r.json()['statuses'] if 'retweeted_status' not in tweet]#No need for boring retweets
                             #except:
                             #        logging.debug(r.text)
+                        if len(tweets) > 0:
+                            lastID = tweets[0].id
                         mediaObjs = []
                         imgs = {}
                         with self.tweetLock:
                                 tweets.extend(self.tweets)
                                 self.tweets = [tweet for (tweet, rectangle) in positionRectangles(self.screen, tweets)]
                                 if len(self.tweets) > 0:
-                                    lastID = self.tweets[0].id
+                                    self.tweets.insert(0, self.tweets.pop())
                                 for tweet in self.tweets:
                                     mediaObjs.extend(tweet.imgs)
                         with self.tempfileLock:
