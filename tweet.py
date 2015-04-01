@@ -86,7 +86,7 @@ class Tweet():
                     width = sum([wordSurf.get_width() for wordSurf in wordSurfs])
                     height = max([wordSurf.get_height() for wordSurf in wordSurfs])
                     lineSurf = pygame.Surface((width, height))
-                    lineSurf.fill(twitter_bg_blue)
+                    lineSurf.fill(white)
                     blitList(lineSurf, wordSurfs)
                     contentList.append(lineSurf)
             #Temporarily ignoring images- must fix!
@@ -94,7 +94,7 @@ class Tweet():
             width = max([x.get_width() for x in contentList])
             height = sum([x.get_height() for x in contentList])
             contentSurf = pygame.Surface((width, height))
-            contentSurf.fill(twitter_bg_blue)
+            contentSurf.fill(white)
             blitList(contentSurf, contentList)
             tailLength = width / 5
             width += BORDER_WIDTH + tailLength
