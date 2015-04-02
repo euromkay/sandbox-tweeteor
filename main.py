@@ -1,4 +1,4 @@
-from controller import *
+from controllerGUI import *
 from searcher import *
 from server import *
 from ConfigParser import SafeConfigParser
