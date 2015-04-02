@@ -42,10 +42,10 @@ class ListFrame(LabelFrame):
         self.removeHandler = removeHandler
         self.list = Listbox(self)
         self.list.grid(row = 0, columnspan = 2)
+        self.list.bind("<Button-1>", lambda event: self.contextMenu.unpost())
         self.list.bind("<Button-3>", self.openMenu)
         self.contextMenu = Menu(self, tearoff = 0)
         self.contextMenu.add_command(label = "Remove", command = self.remove)
-        self.contextMenu.bind("<Leave>", self.contextMenu.unpost())
         self.input = Entry(self)
         self.input.bind("<Return>", self.add)
         self.input.grid(row = 1, columnspan = 2)
@@ -66,7 +66,10 @@ class ListFrame(LabelFrame):
         self.list.delete(ACTIVE)
         self.removeHandler(deleted)
     def openMenu(self, event):
+        index = self.list.index("@" + str(event.x) + "," + str(event.y))
+        if index < 0:
+            return
         self.contextMenu.post(event.x_root, event.y_root)
-        self.list.activate(self.list.index("@" + str(event.x) + "," + str(event.y)))
+        self.list.activate(index)
         self.list.selection_clear(0, END)
         self.list.selection_set(ACTIVE)
