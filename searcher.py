@@ -81,7 +81,6 @@ class Searcher(Thread):
                                 self.excludedUserList.remove(user)
         def run(self):
                 self.server.start()
-                lastID = 1
                 while True:
                         logging.debug("running")
                         if self.exit.isSet():
@@ -94,18 +93,22 @@ class Searcher(Thread):
                         if search == '':#Twitter returns an error for empty searches, so this is a way around it
                                 tweets = []
                         else:
-                            params = {'q': self.getSearch(), 'result_type': 'recent', 'lang': 'en', 'count': 100, 'since_id': lastID}#Check twitter API for all parameters
+                            params = {'q': self.getSearch(), 'result_type': 'recent', 'lang': 'en', 'count': 100}#Check twitter API for all parameters
                             r = requests.get('https://api.twitter.com/1.1/search/tweets.json', headers = self.headers, params = params)
                             #try:
                             tweets = [Tweet(tweet) for tweet in r.json()['statuses'] if 'retweeted_status' not in tweet]#No need for boring retweets
                             #except:
                             #        logging.debug(r.text)
-                        if len(tweets) > 0:
-                            lastID = tweets[0].id
                         mediaObjs = []
                         imgs = {}
                         with self.tweetLock:
-                                tweets.extend(self.tweets)
+                                if(len(self.tweets) > 0 and len(tweets) > 0):
+                                    if self.tweets[0].id < tweets[0].id:
+                                        while True:
+                                            tweets.insert(0, tweets.pop())
+                                            if self.tweets[0].id <= tweets[0].id:
+                                                break
+                                self.tweets = tweets
                                 self.tweets = [tweet for (tweet, rectangle) in positionRectangles(self.screen, tweets)]
                                 if len(self.tweets) > 0:
                                     self.tweets.insert(0, self.tweets.pop())
