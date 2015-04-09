@@ -1,5 +1,6 @@
 from threading import Thread, Lock
 from Tkinter import *
+from ttk import *
 import threading, sys, pygame, logging
 
 # Allows the user to interact with the program (view/change search parameters, exit). Currently only controllable through the terminal.
@@ -14,7 +15,6 @@ class Controller(Thread):
         self.searcher.exit.set()
         self.searcher.join()
         pygame.quit()
-        root.destroy()
         sys.exit()
 
 class GUI(Frame):
