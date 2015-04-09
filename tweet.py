@@ -22,11 +22,11 @@ twitter_bg_blue = pygame.Color(154, 194, 223)
 speechBubble = pygame.image.load('speech.png')
 
 class Tweet():
-    def __init__(self, json, rect = pygame.Rect(0, 0, 0, 0)):
+    def __init__(self, json, rect = None):
         self.json = json
         self.id = self.json['id']
         self.text, self.imgs = self._expandLinks()
-        if rect.width <= 0:
+        if not rect:
             tweetSurface = self.getSurface()
             self.rect = tweetSurface.get_rect()
         else:
