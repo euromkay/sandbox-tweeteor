@@ -89,7 +89,19 @@ class Tweet():
                     lineSurf.fill(white)
                     blitList(lineSurf, wordSurfs)
                     contentList.append(lineSurf)
-            #Temporarily ignoring images- must fix!
+            popularityCount = '';
+            if self.json['favorite_count'] > 0:
+                popularityCount += 'Favorites: ' + str(self.json['favorite_count']) + ' '
+            if self.json['retweet_count'] > 0:
+                popularityCount += 'Retweets: ' + str(self.json['retweet_count'])
+            if len(popularityCount) > 0:
+                popularityBar = textFont.render(popularityCount, 1, black)
+            else:
+                #Ensures that there is still space at the bottom if it is retweeted later
+                popularityBar = textFont.render('Retweets:', 1, black)
+                popularityBar.fill(white)
+            contentList.append(popularityBar)
+            #TODO Temporarily ignoring images- must fix!
             #contentList.extend(self.imgs)
             width = max([x.get_width() for x in contentList])
             height = sum([x.get_height() for x in contentList])
