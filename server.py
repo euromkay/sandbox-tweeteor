@@ -1,7 +1,7 @@
 from socket import *
 from ConfigParser import SafeConfigParser
 from threading import Thread, Lock
-import sys, json, logging
+import json, logging
 
 #Constants- DO NOT EDIT! change server.conf instead
 config = SafeConfigParser()

@@ -1,9 +1,8 @@
 from server import *
 from tweet import *
-from base64 import b64encode
 from threading import Thread, Lock, Event
 from rectangleHandler import *
-import requests, time, sys, json, logging, os
+import requests, time, sys, json, logging
 
 encoder = RectangleEncoder()
 config = SafeConfigParser()

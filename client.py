@@ -4,9 +4,7 @@ from rectangleHandler import *
 from pygame.locals import *
 from threading import Thread, Event
 from ConfigParser import SafeConfigParser
-from base64 import b64decode
 import pygame, sys, json, threading, logging
-import urllib
 
 #Constants
 BORDER_WIDTH = 20

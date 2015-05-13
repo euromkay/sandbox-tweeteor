@@ -1,7 +1,7 @@
-from threading import Thread, Lock
+from threading import Thread
 from Tkinter import *
 from ttk import *
-import threading, sys, pygame, logging
+import sys, pygame, logging
 
 # Allows the user to interact with the program (view/change search parameters, exit). Currently only controllable through the terminal.
 class Controller(Thread):

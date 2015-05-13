@@ -1,10 +1,9 @@
-import urllib, imageHandler
+import imageHandler
 from ConfigParser import SafeConfigParser
 from rectangleHandler import *
 import pygame, sys, json, threading, logging
 import xml.sax.saxutils as xml
 import pygame.font as font#You might have errors with this. If you do, you can change it to pygame.font, and change the calles to Font.render() a bit
-from StringIO import StringIO
 
 logging.basicConfig(filename = 'client.log', level=logging.DEBUG, format='[%(asctime)s : %(levelname)s] [%(threadName)s] %(message)s')
 config = SafeConfigParser()
@@ -64,7 +63,7 @@ class Tweet():
     def getSurface(self):
             surfList = []
             try:
-                    userImage = pygame.image.load(StringIO(urllib.urlopen(self.json['user']['profile_image_url']).read()))
+                    userImage = imageHandler.getImage(self.json['user']['profile_image_url'])
                     imageSurf = pygame.transform.scale(userImage,(70,70))
                     surfList.append(imageSurf)
             except:
