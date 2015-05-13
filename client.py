@@ -4,7 +4,6 @@ from rectangleHandler import *
 from pygame.locals import *
 from threading import Thread, Event
 from ConfigParser import SafeConfigParser
-from StringIO import StringIO
 from base64 import b64decode
 import pygame, sys, json, threading, logging
 import urllib
@@ -24,8 +23,6 @@ class Client(Thread):
 		pygame.init()
                 pygame.display.set_caption(str(coords[0]) + "-" + str(coords[1]))
 		self.coords = self.x, self.y = coords
-		self.imgs = {} #All the images, represented as strings, indexed by url
-		self.imgInUse = {}
 		self.exit = exit
 		self.sock = socket()
 		self.sock.connect(address)
@@ -57,19 +54,9 @@ class Client(Thread):
 				self.sock.close()
 				exit.set()
 				return
-			tweets , imgs = json.loads(s, object_hook = decodeObject)
-			for key in imgs:
-				imgs[key] = b64decode(imgs[key])
-			self.imgs.update(imgs)
+			tweets = json.loads(s, object_hook = decodeObject)
 			self.putTweetsOnScreen(tweets)
-			#self.deleteUnusedImages()
 			pygame.display.update()
-        #Helper method for loading images
-	def getImage(self, mediaObj):
-		s = self.imgs[mediaObj['media_url']]
-		self.imgInUse[mediaObj['media_url']] = True
-		f = StringIO(s)
-		return pygame.image.load(f)
 	#Placeholder method so you can change how the tweets are put on the screen(e.g. moving)
 	def putTweetsOnScreen(self, tweetList):
 		self.window.fill(twitter_bg_blue)
@@ -80,14 +67,6 @@ class Client(Thread):
                         tweet.rect.x -= area.x
                         tweet.rect.y -= area.y
                         self.window.blit(tweet.getSurface(), tweet.rect)
-	def deleteUnusedImages(self):
-		deletedKeys = []
-		for key in self.imgs:
-			if not self.imgInUse[key]:
-				deletedKeys.append(key)
-			self.imgInUse[key]= False
-		for key in deletedKeys:
-			del self.imgs[key]#Removing file from list
 
 logging.basicConfig(filename = 'client.log', level=logging.DEBUG, format='[%(asctime)s : %(levelname)s] [%(threadName)s] %(message)s')
 config = SafeConfigParser()

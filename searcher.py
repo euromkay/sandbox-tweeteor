@@ -2,9 +2,8 @@ from server import *
 from tweet import *
 from base64 import b64encode
 from threading import Thread, Lock, Event
-from tempfile import NamedTemporaryFile
 from rectangleHandler import *
-import requests, time, sys, json, logging
+import requests, time, sys, json, logging, os
 
 encoder = RectangleEncoder()
 config = SafeConfigParser()
@@ -33,8 +32,6 @@ class Searcher(Thread):
             self.exit = Event()
             self.tweets = []
             self.tweetLock = Lock()
-            self.tempfiles = {}
-            self.tempfileLock = Lock()
         def getUsers(self):
                 with self.searchLock:
                         return list(self.userList)
@@ -85,9 +82,6 @@ class Searcher(Thread):
                         logging.debug("running")
                         if self.exit.isSet():
                                 self.server.send('exit')
-                                with self.tempfileLock:
-                                        for key in self.tempfiles:
-                                                self.tempfiles[key].close()
                                 return
                         search = self.getSearch()
                         if search == '':#Twitter returns an error for empty searches, so this is a way around it
@@ -99,8 +93,6 @@ class Searcher(Thread):
                             tweets = [Tweet(tweet) for tweet in r.json()['statuses'] if 'retweeted_status' not in tweet]#No need for boring retweets
                             #except:
                             #        logging.debug(r.text)
-                        mediaObjs = []
-                        imgs = {}
                         with self.tweetLock:
                                 if(len(self.tweets) > 0 and len(tweets) > 0):
                                     if self.tweets[0].id < tweets[0].id:
@@ -112,31 +104,9 @@ class Searcher(Thread):
                                 self.tweets = [tweet for (tweet, rectangle) in positionRectangles(self.screen, tweets)]
                                 if len(self.tweets) > 0:
                                     self.tweets.insert(0, self.tweets.pop())
-                                for tweet in self.tweets:
-                                    mediaObjs.extend(tweet.imgs)
-                        with self.tempfileLock:
-                                for mediaObj in mediaObjs:
-                                        key = mediaObj['media_url']
-                                        if key in self.tempfiles:
-                                                self.tempfiles[key].inUse = True
-                                                continue
-                                        if 'thumb' in mediaObj['sizes']:
-                                                imgRequest = requests.get(key + ':thumb')
-                                        elif 'small' in mediaObj['sizes']:
-                                                imgRequest = requests.get(key + ':small')
-                                        else:
-                                                imgRequest = requests.get(key)
-                                        if imgRequest.status_code == 200:#make sure the link worked
-                                                temp = NamedTemporaryFile(prefix = key.replace('/', ''))
-                                                temp.write(imgRequest.content)#Saves image in temp file so it only has to be downloaded once
-                                                temp.seek(0)#moves to start of file
-                                                imgs[key] = b64encode(temp.read())
-                                                temp.inUse = True
-                                                self.tempfiles[key] = temp 
                         with self.tweetLock:
-                            msg = encoder.encode((self.tweets, imgs))
+                            msg = encoder.encode(self.tweets)
                         self.server.send(msg)
-                        self.deleteUnusedTempfiles()
                         time.sleep(2)#Don't want the loop to run to often, or else you hit the twitter rate limit
         #Helper method for assembling search query
         def getSearch(self):
@@ -152,26 +122,7 @@ class Searcher(Thread):
                         for word in self.excludedWordList:
                                 search += ' -' + word
                 return search
-	#Helper method to clear out images that aren't needed
-        def deleteUnusedTempfiles(self):
-                deletedKeys = []
-                with self.tempfileLock:
-                        tempList = iter(self.tempfiles)
-                        for key in tempList:
-                                if not self.tempfiles[key].inUse:
-                                        self.tempfiles[key].close()#Tempfiles are deleted when closed
-                                        deletedKeys.append(key)
-                                self.tempfiles[key].inUse = False
-                        for key in deletedKeys:
-                                self.tempfiles[key].close()
-                                del self.tempfiles[key]#Removing file from list
         def getWelcomeData(self):
                 with self.tweetLock:
                         tweets = self.tweets
-                with self.tempfileLock:
-                        imgs = {}
-                        for key in self.tempfiles:
-                                f = self.tempfiles[key]
-                                f.seek(0)
-                                imgs[key] = b64encode(f.read())
-                return encoder.encode((tweets, imgs))
+                return encoder.encode(tweets)

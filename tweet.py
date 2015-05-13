@@ -1,4 +1,4 @@
-import urllib
+import urllib, imageHandler
 from ConfigParser import SafeConfigParser
 from rectangleHandler import *
 import pygame, sys, json, threading, logging
@@ -46,7 +46,12 @@ class Tweet():
                     for entity in self.json['entities']['media']:
                             entities.append((entity, 'media'))
                             if entity['type'] == 'photo':
-                                    imgList.append(entity)
+                                if 'thumb' in entity['sizes']:
+                                    imgList.append(entity['media_url'] + ':thumb')
+                                elif 'small' in mediaObj['sizes']:
+                                    imgList.append(entity['media_url'] + ':small')
+                                else:
+                                    imgList.append(entity['media_url'])
             entities = reversed(sorted(entities, key = lambda (entity, eType): entity['indices']))
             for (entity, eType) in entities:#Removes media urls, and lengthens normal urls
                     if eType == 'url':
@@ -58,14 +63,12 @@ class Tweet():
     ### New tweet surface generator ###
     def getSurface(self):
             surfList = []
-            logging.debug('downloading profile pic')
             try:
                     userImage = pygame.image.load(StringIO(urllib.urlopen(self.json['user']['profile_image_url']).read()))
                     imageSurf = pygame.transform.scale(userImage,(70,70))
                     surfList.append(imageSurf)
             except:
                     logging.debug('failed to download profile pic!')
-            logging.debug('done')
             userName = self.json['user']['name']
             userScreenName = self.json['user']['screen_name']
             lines = self.text.split('\n')
@@ -102,7 +105,7 @@ class Tweet():
                 popularityBar.fill(white)
             contentList.append(popularityBar)
             #TODO Temporarily ignoring images- must fix!
-            #contentList.extend(self.imgs)
+            contentList.extend([imageHandler.getImage(img) for img in self.imgs])
             width = max([x.get_width() for x in contentList])
             height = sum([x.get_height() for x in contentList])
             contentSurf = pygame.Surface((width, height))
