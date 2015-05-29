@@ -3,6 +3,7 @@ from tweet import *
 from threading import Thread, Lock, Event
 from rectangleHandler import *
 import requests, time, sys, json, logging
+from collections import *
 
 encoder = RectangleEncoder()
 config = SafeConfigParser()
@@ -29,7 +30,7 @@ class Searcher(Thread):
             self.server = Server(address, self)
             self.screen = pygame.Surface(SCR_SIZE)
             self.exit = Event()
-            self.tweets = []
+            self.tweets = OrderedDict()
             self.tweetLock = Lock()
         def getUsers(self):
                 with self.searchLock:
@@ -88,23 +89,17 @@ class Searcher(Thread):
                         else:
                             params = {'q': self.getSearch(), 'result_type': 'recent', 'lang': 'en', 'count': 100}#Check twitter API for all parameters
                             r = requests.get('https://api.twitter.com/1.1/search/tweets.json', headers = self.headers, params = params)
-                            #try:
                             tweets = [Tweet(tweet) for tweet in r.json()['statuses'] if 'retweeted_status' not in tweet]#No need for boring retweets
-                            #except:
-                            #        logging.debug(r.text)
+                            with self.tweetLock:
+                                for tweet in tweets:
+                                    self.tweets[tweet.id] = tweet
                         with self.tweetLock:
-                                if(len(self.tweets) > 0 and len(tweets) > 0):
-                                    if self.tweets[0].id < tweets[0].id:
-                                        while True:
-                                            tweets.insert(0, tweets.pop())
-                                            if self.tweets[0].id <= tweets[0].id:
-                                                break
-                                self.tweets = tweets
-                                self.tweets = [tweet for (tweet, rectangle) in positionRectangles(self.screen, tweets)]
-                                if len(self.tweets) > 0:
-                                    self.tweets.insert(0, self.tweets.pop())
-                        with self.tweetLock:
-                            msg = encoder.encode(self.tweets)
+                            if len(self.tweets) > 0:
+                                tweet = self.tweets.popitem(False)[1]
+                                self.tweets[tweet.id] = tweet
+                                tweets = list(self.tweets.values())
+                                positionRectangles(self.screen, tweets)
+                        msg = encoder.encode(tweets)
                         self.server.send(msg)
                         time.sleep(2)#Don't want the loop to run to often, or else you hit the twitter rate limit
         #Helper method for assembling search query
@@ -123,5 +118,5 @@ class Searcher(Thread):
                 return search
         def getWelcomeData(self):
                 with self.tweetLock:
-                        tweets = self.tweets
+                        tweets = list(self.tweets.values())
                 return encoder.encode(tweets)
