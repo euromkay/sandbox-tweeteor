@@ -27,6 +27,7 @@ class Searcher(Thread):
             self.excludedWordList = []
             self.excludedUserList = []
             self.searchLock = Lock()
+            self.isSearchUpdated = False
             self.server = Server(address, self)
             self.screen = pygame.Surface(SCR_SIZE)
             self.exit = Event()
@@ -48,37 +49,48 @@ class Searcher(Thread):
                 with self.searchLock:
                         if user not in self.userList:
                                 self.userList.append(user)
+                self.isSearchUpdated = True
         def addHashtag(self, tag):
                 with self.searchLock:
                         if tag not in self.hashtagList:
                                 self.hashtagList.append(tag)
+                self.isSearchUpdated = True
         def removeUser(self, user):
                 with self.searchLock:
                         if user in self.userList:
                                 self.userList.remove(user)
+                self.isSearchUpdated = True
         def removeHashtag(self, tag):
                 with self.searchLock:
                         if tag in self.hashtagList:
                                 self.hashtagList.remove(tag)
+                self.isSearchUpdated = True
         def excludeWord(self, word):
                 with self.searchLock:
                         if word not in self.excludedWordList:
                                 self.excludedWordList.append(word)
+                self.isSearchUpdated = True
         def removeExcludedWord(self, word):
                 with self.searchLock:
                         if word in self.excludedWordList:
                                  self.excludedWordList.remove(word)
+                self.isSearchUpdated = True
         def excludeUser(self, user):
                 with self.searchLock:
                         if user not in self.excludedUserList:
                                 self.excludedUserList.append(user)
+                self.isSearchUpdated = True
         def removeExcludedUser(self, user):
         	with self.searchLock:
                         if user in self.excludedUserList:
                                 self.excludedUserList.remove(user)
+                self.isSearchUpdated = True
         def run(self):
                 self.server.start()
                 while True:
+                        if self.isSearchUpdated:
+                            self.tweets = OrderedDict()
+                            self.isSearchUpdated = False
                         logging.debug("running")
                         if self.exit.isSet():
                                 self.server.send('exit')
