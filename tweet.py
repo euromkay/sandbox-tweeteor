@@ -24,6 +24,8 @@ class Tweet():
     def __init__(self, json, rect = None):
         self.json = json
         self.id = self.json['id']
+        self.retweet_count = self.json['retweet_count']
+        self.favorite_count = self.json['favorite_count']
         self.text, self.imgs = self._expandLinks()
         if not rect:
             tweetSurface = self.getSurface()
@@ -92,10 +94,10 @@ class Tweet():
                     blitList(lineSurf, wordSurfs)
                     contentList.append(lineSurf)
             popularityCount = '';
-            if self.json['favorite_count'] > 0:
-                popularityCount += 'Favorites: ' + str(self.json['favorite_count']) + ' '
-            if self.json['retweet_count'] > 0:
-                popularityCount += 'Retweets: ' + str(self.json['retweet_count'])
+            if self.favorite_count > 0:
+                popularityCount += 'Favorites: ' + str(self.favorite_count) + ' '
+            if self.retweet_count > 0:
+                popularityCount += 'Retweets: ' + str(self.retweet_count)
             if len(popularityCount) > 0:
                 popularityBar = textFont.render(popularityCount, 1, black)
             else:
@@ -103,7 +105,6 @@ class Tweet():
                 popularityBar = textFont.render('Retweets:', 1, black)
                 popularityBar.fill(white)
             contentList.append(popularityBar)
-            #TODO Temporarily ignoring images- must fix!
             contentList.extend([imageHandler.getImage(img) for img in self.imgs])
             width = max([x.get_width() for x in contentList])
             height = sum([x.get_height() for x in contentList])
@@ -124,6 +125,10 @@ class Tweet():
             tweetSurf.fill(twitter_bg_blue)
             blitList(tweetSurf, surfList)
             return tweetSurf
+    def update(self, json):
+        self.json = json
+        self.retweet_count = json['retweet_count']
+        self.favorite_count = json['favorite_count']
 ### For use by tweet surface method ###
 class Word():
 	def __init__(self,text):

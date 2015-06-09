@@ -101,10 +101,13 @@ class Searcher(Thread):
                         else:
                             params = {'q': self.getSearch(), 'result_type': 'recent', 'lang': 'en', 'count': 100}#Check twitter API for all parameters
                             r = requests.get('https://api.twitter.com/1.1/search/tweets.json', headers = self.headers, params = params)
-                            tweets = [Tweet(tweet) for tweet in r.json()['statuses'] if 'retweeted_status' not in tweet]#No need for boring retweets
+                            tweets = [tweet for tweet in r.json()['statuses'] if 'retweeted_status' not in tweet]#No need for boring retweets
                             with self.tweetLock:
                                 for tweet in tweets:
-                                    self.tweets[tweet.id] = tweet
+                                    if tweet['id'] in self.tweets:
+                                        self.tweets[tweet['id']].update(tweet)
+                                    else:
+                                        self.tweets[tweet['id']] = Tweet(tweet)
                         with self.tweetLock:
                             if len(self.tweets) > 0:
                                 tweet = self.tweets.popitem(False)[1]
