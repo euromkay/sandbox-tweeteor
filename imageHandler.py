@@ -1,7 +1,7 @@
 import os, pygame, requests
 
 def getImage(url):
-    filename = url.replace('/', '')
+    filename = os.path.join("images", url.replace('/', ''))
     if os.path.isfile(filename):
         f = open(filename, 'r')
     else:

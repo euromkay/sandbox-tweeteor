@@ -61,3 +61,6 @@ auth.py*
 
 #Config files
 *.conf
+
+#Downloaded images
+images/
