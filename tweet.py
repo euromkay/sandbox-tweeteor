@@ -1,4 +1,5 @@
 import imageHandler
+import os
 from ConfigParser import SafeConfigParser
 from rectangleHandler import *
 import pygame, sys, json, threading, logging
@@ -28,13 +29,17 @@ class Tweet():
         self.favorite_count = self.json['favorite_count']
         self.text, self.imgs = self._expandLinks()
         if not rect:
-            tweetSurface = self.getSurface()
+            tweetSurface = self.createSurface()
+            pygame.image.save(tweetSurface, os.path.join("images", str(self.id) + ".png"))
             self.rect = tweetSurface.get_rect()
         else:
             self.rect = rect
         
     def get_rect(self):
         return self.rect
+
+    def getSurface(self):
+        return imageHandler.getSurface(self.id)
     
     #Helper method that takes a tweet, and returns the tweet text with all urls expanded (and image urls removed), along with a list of all the images
     def _expandLinks(self):
@@ -62,7 +67,7 @@ class Tweet():
             return unicode(xml.unescape(text)), imgList
 
     ### New tweet surface generator ###
-    def getSurface(self):
+    def createSurface(self):
             surfList = []
             try:
                     userImage = imageHandler.getImage(self.json['user']['profile_image_url'])

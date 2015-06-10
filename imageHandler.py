@@ -13,3 +13,7 @@ def getImage(url):
         else:
             raise Error('URL Invalid!') 
     return pygame.image.load(filename)
+
+def getSurface(id):
+    filename = os.path.join("images", str(id) + ".png")
+    return pygame.image.load(filename)
