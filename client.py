@@ -66,30 +66,31 @@ class Client(Thread):
                         tweet.rect.y -= area.y
                         self.window.blit(tweet.getSurface(), tweet.rect)
 
-logging.basicConfig(filename = 'client.log', level=logging.DEBUG, format='[%(asctime)s : %(levelname)s] [%(threadName)s] %(message)s')
-config = SafeConfigParser()
-config.read('client.conf')
-address = (config.get('connection', 'address'), config.getint('connection', 'port'))
-#Uses coords from file if in auto mode, otherwise asks user for coords
-if config.getboolean('coordinates', 'auto'):
-	coords = (config.getint('coordinates', 'x'), config.getint('coordinates', 'y'))
-else:
-	coords = (int(sys.argv[1]), int(sys.argv[2]))
-exit = Event() #Event for coordinating shutdown
-client = Client(address, coords, exit)
-client.start()
-while True:
-	#Exits if Client thread already exited
-	if exit.isSet():
-		pygame.quit()
-		sys.exit()
-	#Exits if window was closed, and tells Client thread to close
-	for event in pygame.event.get():
-		if event.type == QUIT:
-			exit.set()
-			break
-	#This else block executes as long as the for loop did not break (the program is not shutting down)
-	else:
-		pygame.time.wait(10)
-		continue
-	break #Only executes if earlier break was called
+if __name__ == "__main__":
+    logging.basicConfig(filename = 'client.log', level=logging.DEBUG, format='[%(asctime)s : %(levelname)s] [%(threadName)s] %(message)s')
+    config = SafeConfigParser()
+    config.read('client.conf')
+    address = (config.get('connection', 'address'), config.getint('connection', 'port'))
+    #Uses coords from file if in auto mode, otherwise asks user for coords
+    if config.getboolean('coordinates', 'auto'):
+            coords = (config.getint('coordinates', 'x'), config.getint('coordinates', 'y'))
+    else:
+            coords = (int(sys.argv[1]), int(sys.argv[2]))
+    exit = Event() #Event for coordinating shutdown
+    client = Client(address, coords, exit)
+    client.start()
+    while True:
+            #Exits if Client thread already exited
+            if exit.isSet():
+                    pygame.quit()
+                    sys.exit()
+            #Exits if window was closed, and tells Client thread to close
+            for event in pygame.event.get():
+                    if event.type == QUIT:
+                            exit.set()
+                            break
+            #This else block executes as long as the for loop did not break (the program is not shutting down)
+            else:
+                    pygame.time.wait(10)
+                    continue
+            break #Only executes if earlier break was called

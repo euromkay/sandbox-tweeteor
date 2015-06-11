@@ -132,8 +132,12 @@ class Tweet():
             return tweetSurf
     def update(self, json):
         self.json = json
-        self.retweet_count = json['retweet_count']
-        self.favorite_count = json['favorite_count']
+        if self.retweet_count != json['retweet_count'] or self.favorite_count != json['favorite_count']:
+            self.retweet_count = json['retweet_count']
+            self.favorite_count = json['favorite_count']
+            tweetSurface = self.createSurface()
+            pygame.image.save(tweetSurface, os.path.join("images", str(self.id) + ".png"))
+
 ### For use by tweet surface method ###
 class Word():
 	def __init__(self,text):
