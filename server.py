@@ -1,52 +1,83 @@
-from socket import *
-from ConfigParser import SafeConfigParser
+"""Handles communication between server process and clients."""
+import json
+import logging
+from socket import socket
 from threading import Thread, Lock
-import json, logging
 
-#Constants- DO NOT EDIT! change server.conf instead
-config = SafeConfigParser()
-config.read('server.conf')
-WIN_SIZE = WIN_WIDTH, WIN_HEIGHT = config.getint('window', 'width'), config.getint('window', 'height')
-WIN_PER_ROW = config.getint('window', 'win_per_row')
-WIN_PER_COLUMN = config.getint('window', 'win_per_col')
-SCR_SIZE = SCR_WIDTH, SCR_HEIGHT = WIN_WIDTH * WIN_PER_ROW, WIN_HEIGHT * WIN_PER_COLUMN
+from constants import WIN_SIZE, SCR_SIZE
 
 class Server(Thread):
-	def __init__(self, address, sender):
-		Thread.__init__(self, name = 'Server')
-		self.sock = socket()
-		self.sock.bind(address)
-		self.sock.listen(5)
-		self.clients = []
-		self.clientLock = Lock()
-		self.sender = sender
-		self.msg = ''
-		self.msgLock = Lock()
-		self.setDaemon(True)
-	def run(self):
-		while True:
-			logging.debug("running")
-			(client, clAddr) = self.sock.accept()
-			self.addClient(client)
-	def send(self, msg):
-		with self.clientLock:
-			for client in self.clients:
-				sendToClient(client, msg)
-	def addClient(self, client):
-		msg = self.sender.getWelcomeData()
-		with self.clientLock:
-			client.send(json.dumps(WIN_SIZE))
-			client.recv(3)
-			client.send(json.dumps(SCR_SIZE))
-			client.recv(3)
-			sendToClient(client, msg)
-			self.clients.append(client)
-def sendToClient(client, msg):
-	try:
-		client.send(str(len(msg))) #The client can't recieve all the data in one go, so I have to tell it how much data to wait for
-		logging.debug('sending ' + str(len(msg)) + ' bytes')
-		client.recv(3)
-		client.sendall(msg)
-		client.recv(4) #waiting to keep the client and server in sync
-	except:
-		pass
+    """
+    A dedicated thread for recieving incoming connections by clients.
+    Also contains methods for sending messages to one or all
+    connected clients.
+    """
+
+    def __init__(self, address):
+        """Creates a server listening at the given address."""
+        Thread.__init__(self, name = 'Server')
+        self.sock = socket()
+        self.sock.bind(address)
+        self.sock.listen(5)
+        self.clients = []
+        self.client_lock = Lock()
+        self.msg = ''
+        self.msg_lock = Lock()
+        #Daemon threads automatically die when no other threads
+        #are left in a process, making shutdown easier.
+        self.setDaemon(True)
+
+    def run(self):
+        """
+        Wait for incoming socket connections, 
+        and add all to the client list.
+        """
+        while True:
+            logging.debug("running")
+            (client, clAddr) = self.sock.accept()
+            self.add_client(client)
+
+    def send(self, msg):
+        """Send a message to all connected clients."""
+        with self.msg_lock:
+            #msg is cached to be used as a "welcom message"
+            #for new clients.
+            self.msg = msg
+        with self.client_lock:
+            for client in self.clients:
+                Server.send_to_client(client, msg)
+
+    def add_client(self, client):
+        """
+        Setup connection with client, and add it to the client list.
+
+        The client is sent the window and screen sizes,
+        and a "welcome message", which is the last message sent to all clients.
+        This welcome message prevents the client from having to wait
+        for the next send, which make take several seconds.
+        """
+        with self.client_lock:
+            #the recvs are used to wait for the client to acknowledge
+            #that it recieved the message.
+            client.send(json.dumps(WIN_SIZE))
+            client.recv(3)
+            client.send(json.dumps(SCR_SIZE))
+            client.recv(3)
+            with self.msg_lock:
+                Server.send_to_client(client, self.msg)
+            self.clients.append(client)
+
+    @staticmethod
+    def send_to_client(client, msg):
+        """Send a message to a specific client."""
+        try:
+            #The client can't recieve all the data in one go, 
+            #so I have to tell it how much data to wait for.
+            client.send(str(len(msg))) 
+            logging.debug('sending ' + str(len(msg)) + ' bytes')
+            #waiting for acknowledgement
+            client.recv(3)
+            client.sendall(msg)
+            client.recv(4) #waiting to keep the client and server in sync
+        except:
+            pass

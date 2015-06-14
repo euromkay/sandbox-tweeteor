@@ -1,17 +1,13 @@
-from server import *
 from tweet import *
 from threading import Thread, Lock, Event
 from rectangleHandler import *
 import requests, time, sys, json, logging
 from collections import *
 
+from constants import *
+from server import *
+
 encoder = RectangleEncoder()
-config = SafeConfigParser()
-config.read('server.conf')
-WIN_SIZE = WIN_WIDTH, WIN_HEIGHT = config.getint('window', 'width'), config.getint('window', 'height')
-WIN_PER_ROW = config.getint('window', 'win_per_row')
-WIN_PER_COLUMN = config.getint('window', 'win_per_col')
-SCR_SIZE = SCR_WIDTH, SCR_HEIGHT = WIN_WIDTH * WIN_PER_ROW, WIN_HEIGHT * WIN_PER_COLUMN
 #Searches twitter based on user-set parameters, and makes a list of the tweets(dictionaries)
 class Searcher(Thread):
         def __init__(self, credentials, address):
@@ -28,7 +24,7 @@ class Searcher(Thread):
             self.excludedUserList = []
             self.searchLock = Lock()
             self.isSearchUpdated = False
-            self.server = Server(address, self)
+            self.server = Server(address)
             self.screen = pygame.Surface(SCR_SIZE)
             self.exit = Event()
             self.tweets = OrderedDict()
@@ -131,7 +127,3 @@ class Searcher(Thread):
                         for word in self.excludedWordList:
                                 search += ' -' + word
                 return search
-        def getWelcomeData(self):
-                with self.tweetLock:
-                        tweets = list(self.tweets.values())
-                return encoder.encode(tweets)

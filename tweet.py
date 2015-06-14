@@ -1,4 +1,4 @@
-import imageHandler
+import image_handler
 import os
 from ConfigParser import SafeConfigParser
 from rectangleHandler import *
@@ -39,7 +39,8 @@ class Tweet():
         return self.rect
 
     def getSurface(self):
-        return imageHandler.getSurface(self.id)
+        filename = os.path.join("images", str(self.id) + ".png")
+        return pygame.image.load(filename)
     
     #Helper method that takes a tweet, and returns the tweet text with all urls expanded (and image urls removed), along with a list of all the images
     def _expandLinks(self):
@@ -70,7 +71,7 @@ class Tweet():
     def createSurface(self):
             surfList = []
             try:
-                    userImage = imageHandler.getImage(self.json['user']['profile_image_url'])
+                    userImage = image_handler.get_image(self.json['user']['profile_image_url'])
                     imageSurf = pygame.transform.scale(userImage,(70,70))
                     surfList.append(imageSurf)
             except:
@@ -110,7 +111,7 @@ class Tweet():
                 popularityBar = textFont.render('Retweets:', 1, black)
                 popularityBar.fill(white)
             contentList.append(popularityBar)
-            contentList.extend([imageHandler.getImage(img) for img in self.imgs])
+            contentList.extend([image_handler.get_image(img) for img in self.imgs])
             width = max([x.get_width() for x in contentList])
             height = sum([x.get_height() for x in contentList])
             contentSurf = pygame.Surface((width, height))
