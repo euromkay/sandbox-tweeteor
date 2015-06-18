@@ -75,7 +75,7 @@ if __name__ == "__main__":
         level=logging.DEBUG,
         format='[%(asctime)s : %(levelname)s] [%(threadName)s] %(message)s')
     config = SafeConfigParser()
-    config.read('client.conf')
+    config.read('config')
     address = (config.get('connection', 'address'),
                config.getint('connection', 'port'))
     # Uses coords from file if in auto mode, otherwise asks user for coords

@@ -9,7 +9,7 @@ import image_handler
 from rectangle_handler import *
 
 config = SafeConfigParser()
-config.read('client.conf')
+config.read('config')
 font.init()
 
 BORDER_WIDTH = 20

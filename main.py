@@ -15,7 +15,7 @@ if __name__ == "__main__":
         format="""[%(asctime)s : %(levelname)s]
                    [%(threadName)s] %(message)s""")
     config = SafeConfigParser()
-    config.read('server.conf')
+    config.read('config')
     address = ('', config.getint('connection', 'port'))
     # Creates credentials for twitter api
     credentials = b64encode(

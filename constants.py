@@ -2,7 +2,7 @@ from ConfigParser import SafeConfigParser
 
 # Constants- DO NOT EDIT! change server.conf instead
 config = SafeConfigParser()
-config.read('server.conf')
+config.read('config')
 WIN_WIDTH = config.getint('window', 'width')
 WIN_HEIGHT = config.getint('window', 'height')
 WIN_SIZE = WIN_WIDTH, WIN_HEIGHT
