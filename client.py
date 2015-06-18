@@ -1,6 +1,6 @@
 from socket import *
 from tweet import *
-from rectangleHandler import *
+from rectangle_handler import *
 from pygame.locals import *
 from threading import Thread, Event
 from ConfigParser import SafeConfigParser
@@ -52,7 +52,7 @@ class Client(Thread):
 				self.sock.close()
 				exit.set()
 				return
-			tweets = json.loads(s, object_hook = decodeObject)
+			tweets = json.loads(s, object_hook = decode_object)
 			self.putTweetsOnScreen(tweets)
 			pygame.display.update()
 	#Placeholder method so you can change how the tweets are put on the screen(e.g. moving)

@@ -1,6 +1,6 @@
 from tweet import *
 from threading import Thread, Lock, Event
-from rectangleHandler import *
+from rectangle_handler import *
 import requests, time, sys, json, logging
 from collections import *
 
@@ -109,7 +109,7 @@ class Searcher(Thread):
                                 tweet = self.tweets.popitem(False)[1]
                                 self.tweets[tweet.id] = tweet
                                 tweets = list(self.tweets.values())
-                                positionRectangles(self.screen, tweets)
+                                position_rectangles(tweets, self.screen)
                         msg = encoder.encode(tweets)
                         self.server.send(msg)
                         time.sleep(2)#Don't want the loop to run to often, or else you hit the twitter rate limit

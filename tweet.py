@@ -1,7 +1,7 @@
 import image_handler
 import os
 from ConfigParser import SafeConfigParser
-from rectangleHandler import *
+from rectangle_handler import *
 import pygame, sys, json, threading, logging
 import xml.sax.saxutils as xml
 import pygame.font as font#You might have errors with this. If you do, you can change it to pygame.font, and change the calles to Font.render() a bit
@@ -97,7 +97,7 @@ class Tweet():
                     height = max([wordSurf.get_height() for wordSurf in wordSurfs])
                     lineSurf = pygame.Surface((width, height))
                     lineSurf.fill(white)
-                    blitList(lineSurf, wordSurfs)
+                    blit_list(wordSurfs, lineSurf)
                     contentList.append(lineSurf)
             popularityCount = '';
             if self.favorite_count > 0:
@@ -116,7 +116,7 @@ class Tweet():
             height = sum([x.get_height() for x in contentList])
             contentSurf = pygame.Surface((width, height))
             contentSurf.fill(white)
-            blitList(contentSurf, contentList)
+            blit_list(contentList, contentSurf)
             tailLength = width / 5
             width += BORDER_WIDTH + tailLength
             height += 2* BORDER_HEIGHT
@@ -129,7 +129,7 @@ class Tweet():
             height = sum([x.get_height() for x in surfList])
             tweetSurf = pygame.Surface((width, height))
             tweetSurf.fill(twitter_bg_blue)
-            blitList(tweetSurf, surfList)
+            blit_list(surfList, tweetSurf)
             return tweetSurf
     def update(self, json):
         self.json = json
