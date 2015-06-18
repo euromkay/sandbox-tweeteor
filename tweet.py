@@ -94,7 +94,7 @@ class Tweet(object):
                     surf = helvetica.render(word.text + '  ', 1, word.color)
                     word_surfs.append(surf)
                 except:
-                    logging.debug(word.text)
+                    pass
             if word_surfs == []:
                 continue
             width = sum([surf.get_width() for surf in word_surfs])

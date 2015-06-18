@@ -10,10 +10,9 @@ from searcher import Searcher
 if __name__ == "__main__":
     # Starts logger for debugger
     logging.basicConfig(
-        filename='server.log',
+        filename='log',
         level=logging.DEBUG,
-        format="""[%(asctime)s : %(levelname)s]
-                   [%(threadName)s] %(message)s""")
+        format="[%(asctime)s : %(levelname)s] [%(threadName)s] %(message)s")
     config = SafeConfigParser()
     config.read('config')
     address = ('', config.getint('connection', 'port'))

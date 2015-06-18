@@ -1,6 +1,5 @@
 """Handles communication between server process and clients."""
 import json
-import logging
 from socket import socket, error as SocketError
 from threading import Thread, Lock
 
@@ -34,7 +33,6 @@ class Server(Thread):
         and add all to the client list.
         """
         while True:
-            logging.debug("running")
             (client, _) = self.sock.accept()
             self.add_client(client)
 
@@ -75,7 +73,6 @@ class Server(Thread):
             # The client can't recieve all the data in one go,
             # so I have to tell it how much data to wait for.
             client.send(str(len(msg)))
-            logging.debug('sending ' + str(len(msg)) + ' bytes')
             # waiting for acknowledgement
             client.recv(3)
             client.sendall(msg)

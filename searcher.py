@@ -1,5 +1,4 @@
 import time
-import logging
 from collections import OrderedDict
 from threading import Thread, Lock, Event
 
@@ -93,7 +92,6 @@ class Searcher(Thread):
             if self.is_search_updated:
                 self.tweets = OrderedDict()
                 self.is_search_updated = False
-            logging.debug("running")
             if self.exit.is_set():
                 self.server.send('exit')
                 return

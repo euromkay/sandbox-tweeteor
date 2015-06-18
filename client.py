@@ -33,7 +33,6 @@ class Client(Thread):
 
     def run(self):
         while True:
-            logging.debug("running")
             # Exits if window was closed
             if exit.is_set():
                 self.sock.close()
@@ -71,7 +70,7 @@ class Client(Thread):
 
 if __name__ == "__main__":
     logging.basicConfig(
-        filename='client.log',
+        filename='log',
         level=logging.DEBUG,
         format='[%(asctime)s : %(levelname)s] [%(threadName)s] %(message)s')
     config = SafeConfigParser()

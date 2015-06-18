@@ -59,5 +59,8 @@ docs/_build/
 #Configuration File (Includes API key)
 config
 
+#Tweeteor Log File
+log
+
 #Downloaded images
 images/
