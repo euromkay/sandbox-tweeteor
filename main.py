@@ -4,7 +4,7 @@ from base64 import b64encode
 from ConfigParser import SafeConfigParser
 import logging
 
-from controllerGUI import Controller
+from controller import Controller
 from searcher import Searcher
 from server import Server
 

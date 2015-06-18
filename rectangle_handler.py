@@ -77,11 +77,13 @@ def decode_object(dictionary):
     """
     if 'class' in dictionary:
         if dictionary['class'] == 'Tweet':
-            return tweet.Tweet(dictionary['json'],
-                               decode_object(dictionary['rect'])) 
+            return tweet.Tweet(
+                dictionary['json'],
+                decode_object(dictionary['rect'])) 
         if dictionary['class'] == 'Rect':
-            return pygame.Rect(dictionary['left'],
-                               dictionary['top'],
-                               dictionary['width'],
-                               dictionary['height']) 
+            return pygame.Rect(
+                dictionary['left'],
+                dictionary['top'],
+                dictionary['width'],
+                dictionary['height']) 
     return dictionary
