@@ -1,20 +1,20 @@
 import sys
-import logging
 from threading import Thread
-from Tkinter import *
-from ttk import *
+from Tkinter import Tk, Listbox, Menu, END, ACTIVE, W, E
+from ttk import Frame, LabelFrame, Button, Entry
 
 import pygame
+
 
 class Controller(Thread):
 
     def __init__(self, searcher):
-        Thread.__init__(self, name = 'Controller')
+        Thread.__init__(self, name='Controller')
         self.searcher = searcher
 
     def run(self):
         root = Tk()
-        app = GUI(self.searcher, master = root)
+        app = GUI(self.searcher, master=root)
         app.mainloop()
         self.searcher.exit.set()
         self.searcher.join()
@@ -24,65 +24,65 @@ class Controller(Thread):
 
 class GUI(Frame):
 
-    def __init__(self, searcher, master = None):
+    def __init__(self, searcher, master=None):
         Frame.__init__(self, master)
         self.pack()
         self.exit = Button(self)
         self.exit['text'] = "Quit"
         self.exit['command'] = self.quit
-        self.exit.grid(row = 0)
+        self.exit.grid(row=0)
         self.hashtags = ListFrame(
-            "Hashtags", 
-             searcher.addHashtag,
-             searcher.removeHashtag,
-             master = self)
-        self.hashtags.grid(row = 1, column = 0, padx = 5)
+            "Hashtags",
+            searcher.add_hashtag,
+            searcher.remove_hashtag,
+            master=self)
+        self.hashtags.grid(row=1, column=0, padx=5)
         self.users = ListFrame(
             "Users",
-             searcher.addUser,
-             searcher.removeUser,
-             master = self)
-        self.users.grid(row = 1, column = 1, padx = 5)
+            searcher.add_user,
+            searcher.remove_user,
+            master=self)
+        self.users.grid(row=1, column=1, padx=5)
         self.excluded_words = ListFrame(
             "Excluded Words",
-             searcher.excludeWord,
-             searcher.removeExcludedWord,
-             master = self)
-        self.excluded_words.grid(row = 1, column = 2, padx = 5)
+            searcher.exclude_word,
+            searcher.remove_excluded_word,
+            master=self)
+        self.excluded_words.grid(row=1, column=2, padx=5)
         self.excluded_words = ListFrame(
             "Excluded Users",
-             searcher.excludeUser,
-             searcher.removeExcludedUser,
-             master = self)
-        self.excluded_words.grid(row = 1, column = 3, padx = 5)
+            searcher.exclude_user,
+            searcher.remove_excluded_user,
+            master=self)
+        self.excluded_words.grid(row=1, column=3, padx=5)
 
 
 class ListFrame(LabelFrame):
 
-    def __init__(self, name, add_handler, remove_handler, master = None):
+    def __init__(self, name, add_handler, remove_handler, master=None):
         LabelFrame.__init__(self, master)
         self['text'] = name
         self.add_handler = add_handler
         self.remove_handler = remove_handler
         self.list = Listbox(self)
-        self.list.grid(row = 0, columnspan = 2)
+        self.list.grid(row=0, columnspan=2)
         self.list.bind("<Button-1>", lambda event: self.context_menu.unpost())
         self.list.bind("<Button-3>", self.open_menu)
-        self.context_menu = Menu(self, tearoff = 0)
-        self.context_menu.add_command(label = "Remove", command = self.remove)
+        self.context_menu = Menu(self, tearoff=0)
+        self.context_menu.add_command(label="Remove", command=self.remove)
         self.input = Entry(self)
         self.input.bind("<Return>", self.add)
-        self.input.grid(row = 1, columnspan = 2)
+        self.input.grid(row=1, columnspan=2)
         self.add_button = Button(self)
         self.add_button['text'] = "Add"
         self.add_button['command'] = self.add
-        self.add_button.grid(row = 2, column = 0, sticky = W+E)
+        self.add_button.grid(row=2, column=0, sticky=W+E)
         self.remove_button = Button(self)
         self.remove_button['text'] = "Remove"
         self.remove_button['command'] = self.remove
-        self.remove_button.grid(row = 2, column = 1, sticky = W+E)
+        self.remove_button.grid(row=2, column=1, sticky=W+E)
 
-    def add(self, event = None):
+    def add(self, event):
         self.list.insert(END, self.input.get())
         self.add_handler(self.input.get())
         self.input.delete(0, END)

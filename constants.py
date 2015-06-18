@@ -1,6 +1,6 @@
 from ConfigParser import SafeConfigParser
 
-#Constants- DO NOT EDIT! change server.conf instead
+# Constants- DO NOT EDIT! change server.conf instead
 config = SafeConfigParser()
 config.read('server.conf')
 WIN_WIDTH = config.getint('window', 'width')
