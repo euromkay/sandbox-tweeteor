@@ -1,13 +1,14 @@
 import time
+import json
 from collections import OrderedDict
 from threading import Thread, Lock, Event
 
 import requests
 import pygame
 
-from tweet import Tweet
+from tweet import Tweet, encode_tweet
 from server import Server
-from rectangle_handler import RectangleEncoder, position_rectangles
+from rectangle_handler import position_rectangles
 from constants import SCR_SIZE
 
 
@@ -86,7 +87,6 @@ class Searcher(Thread):
 
     def run(self):
         screen = pygame.Surface(SCR_SIZE)
-        encoder = RectangleEncoder()
         self.server.start()
         while True:
             if self.is_search_updated:
@@ -123,7 +123,7 @@ class Searcher(Thread):
                 self.tweets[tweet.id] = tweet
                 tweets = list(self.tweets.values())
                 position_rectangles(tweets, screen)
-            msg = encoder.encode(tweets)
+            msg = json.dumps(tweets, default=encode_tweet)
             self.server.send(msg)
             # Don't want the loop to run to often,
             # or else you hit the twitter rate limit

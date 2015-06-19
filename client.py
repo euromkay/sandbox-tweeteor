@@ -7,7 +7,7 @@ from ConfigParser import SafeConfigParser
 
 import pygame
 
-from rectangle_handler import decode_object
+from tweet import decode_tweet
 
 # Constants
 TWITTER_BLUE = pygame.Color(154, 194, 223)
@@ -50,7 +50,7 @@ class Client(Thread):
                 self.sock.close()
                 exit.set()
                 return
-            tweets = json.loads(msg, object_hook=decode_object)
+            tweets = json.loads(msg, object_hook=decode_tweet)
             self.update_screen(tweets)
             pygame.display.update()
 

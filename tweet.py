@@ -6,7 +6,7 @@ import pygame
 import pygame.font as font
 
 import image_handler
-from rectangle_handler import *
+from rectangle_handler import blit_list
 
 config = SafeConfigParser()
 config.read('config')
@@ -162,3 +162,37 @@ class Word(object):
             self.color = BLUE
         else:
             self.color = BLACK
+
+
+def encode_tweet(o):
+    if isinstance(o, Tweet):
+        x = o.__dict__
+        x['class'] = 'Tweet'
+    elif isinstance(o, pygame.Rect):
+        x = {'left': o.left,
+             'top': o.top,
+             'width': o.width,
+             'height': o.height,
+             'class': "Rect"}
+    else:
+        raise TypeError("Not a Tweet!")
+    return x
+
+
+def decode_tweet(dictionary):
+    """
+    Decodes JSON into Pygame Rects and Tweet Objects (as long as they
+    were encoded with TweetEncoder).
+    """
+    if 'class' in dictionary:
+        if dictionary['class'] == 'Tweet':
+            return Tweet(
+                dictionary['json'],
+                decode_tweet(dictionary['rect']))
+        elif dictionary['class'] == 'Rect':
+            return pygame.Rect(
+                dictionary['left'],
+                dictionary['top'],
+                dictionary['width'],
+                dictionary['height'])
+    return dictionary

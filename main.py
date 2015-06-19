@@ -3,6 +3,7 @@
 from base64 import b64encode
 from ConfigParser import SafeConfigParser
 import logging
+import sys
 
 from controller import Controller
 from searcher import Searcher
@@ -23,3 +24,4 @@ if __name__ == "__main__":
     searcher.start()
     controller = Controller(searcher)
     controller.start()
+    sys.exit()

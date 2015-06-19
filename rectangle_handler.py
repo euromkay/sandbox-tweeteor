@@ -2,9 +2,7 @@
 Miscellaneous functions for dealing with rectangles.
 Should be broken into multiple modules.
 """
-import json
 import pygame
-import tweet
 
 
 def blit_list(sources, destination):
@@ -48,43 +46,3 @@ def position_rectangles(source_list, surface):
             source.rect = rect
         sources.append((source, rect))
     return sources
-
-
-class RectangleEncoder(json.JSONEncoder):
-    """Encodes both Tweet objects and pygame Rects into JSON."""
-
-    def __init__(self):
-        json.JSONEncoder.__init__(self)
-
-    def default(self, o):
-        if isinstance(o, pygame.Rect):
-            x = {'left': o.left,
-                 'top': o.top,
-                 'width': o.width,
-                 'height': o.height,
-                 'class': "Rect"}
-        elif isinstance(o, tweet.Tweet):
-            x = o.__dict__
-            x['class'] = 'Tweet'
-        else:
-            x = json.JSONEncoder.default(self, o)
-        return x
-
-
-def decode_object(dictionary):
-    """
-    Decodes JSON into Pygame Rects and Tweet Objects (as long as they
-    were encoded with RectangleEncoder).
-    """
-    if 'class' in dictionary:
-        if dictionary['class'] == 'Tweet':
-            return tweet.Tweet(
-                dictionary['json'],
-                decode_object(dictionary['rect']))
-        if dictionary['class'] == 'Rect':
-            return pygame.Rect(
-                dictionary['left'],
-                dictionary['top'],
-                dictionary['width'],
-                dictionary['height'])
-    return dictionary
