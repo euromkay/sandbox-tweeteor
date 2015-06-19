@@ -62,5 +62,5 @@ config
 #Tweeteor Log File
 log
 
-#Downloaded images
-images/
+#Cache for Images and Tweet Surfaces
+cache/

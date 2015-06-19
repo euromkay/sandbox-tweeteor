@@ -5,6 +5,24 @@ Should be broken into multiple modules.
 import pygame
 
 
+def make_column(surfaces, bg_color):
+    width = max([o.get_width() for o in surfaces])
+    height = sum([o.get_height() for o in surfaces])
+    destination = pygame.Surface((width, height))
+    destination.fill(bg_color)
+    blit_list(surfaces, destination)
+    return destination
+
+
+def make_row(surfaces, bg_color):
+    width = sum([o.get_width() for o in surfaces])
+    height = max([o.get_height() for o in surfaces])
+    destination = pygame.Surface((width, height))
+    destination.fill(bg_color)
+    blit_list(surfaces, destination)
+    return destination
+
+
 def blit_list(sources, destination):
     """
     Blit all surfaces in sources onto destination.

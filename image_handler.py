@@ -16,15 +16,15 @@ def get_image(url):
     # os.path.join is used to be cross-platform;
     # this code may one day run on Windows. Slashes are removed
     # from the image name to avoid file naming problems.
-    filename = os.path.join("images", url.replace('/', ''))
+    directory = os.path.join("cache", "images")
+    filename = os.path.join(directory, url.replace('/', ''))
     # Only download the image if it is not cached yet
     if not os.path.isfile(filename):
         img_request = requests.get(url)
         if img_request.status_code == 200:  # make sure the link worked
-            f = open(filename, mode='w')
-            # Saves image in temp file so it only has to be downloaded once
-            f.write(img_request.content)
-            f.close()
+            with open(filename, mode="w") as f:
+                # Saves image in temp file so it only has to be downloaded once
+                f.write(img_request.content)
         else:
             raise IOError('URL Invalid!')
     return pygame.image.load(filename)
