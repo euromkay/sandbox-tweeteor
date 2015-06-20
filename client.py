@@ -21,25 +21,23 @@ class Client(Thread):
             str(coords[0]) + "-" + str(coords[1]))
         self.coords = self.x, self.y = coords
         self.exit = exit
-        self.sock = socket()
-        self.sock.connect(address)
-        # This represents the window belonging to the client
-        self.window = pygame.display.set_mode(json.loads(self.sock.recv(128)))
-        self.sock.send('ACK')
-        # This represents the whole screen (all the clients' windows together)
-        self.screen = pygame.Surface(json.loads(self.sock.recv(128)))
-        self.sock.send('ACK')
+        self.address = address
 
     def run(self):
+        sock = socket()
         try:
+            sock.connect(self.address)
+            # This represents the window belonging to the client
+            self.window = pygame.display.set_mode(json.loads(sock.recv(128)))
+            sock.send('ACK')
             while not exit.is_set():
-                length = int(self.sock.recv(1024))
-                self.sock.send('ACK')  # Tells server that it got the length
-                msg = self.sock.recv(2048)
+                length = int(sock.recv(1024))
+                sock.send('ACK')  # Tells server that it got the length
+                msg = sock.recv(2048)
                 # Calls recv multiple times to get the entire message
                 while len(msg) < length:
-                    msg += self.sock.recv(2048)
-                self.sock.send('done')
+                    msg += sock.recv(2048)
+                sock.send('done')
                 msg = msg[0:length]  # cut off the extra bytes
                 if msg == 'exit':
                     break
@@ -47,7 +45,7 @@ class Client(Thread):
                 self.update_screen(tweets)
                 pygame.display.update()
         finally:
-            self.sock.close()
+            sock.close()
             exit.set()
 
     def update_screen(self, tweets):

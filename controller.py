@@ -17,9 +17,6 @@ class Controller(Thread):
         app = GUI(self.searcher, master=root)
         app.mainloop()
         self.searcher.exit.set()
-        self.searcher.join()
-        pygame.quit()
-        sys.exit()
 
 
 class GUI(Frame):

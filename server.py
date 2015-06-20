@@ -60,8 +60,6 @@ class Server(Thread):
             # that it recieved the message.
             client.send(json.dumps(WIN_SIZE))
             client.recv(3)
-            client.send(json.dumps(SCR_SIZE))
-            client.recv(3)
             with self.msg_lock:
                 Server.send_to_client(client, self.msg)
             self.clients.append(client)

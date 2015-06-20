@@ -88,46 +88,46 @@ class Searcher(Thread):
     def run(self):
         screen = pygame.Surface(SCR_SIZE)
         self.server.start()
-        while True:
-            if self.is_search_updated:
-                self.tweets = OrderedDict()
-                self.is_search_updated = False
-            if self.exit.is_set():
-                self.server.send('exit')
-                return
-            search = self.get_search()
-            # Twitter returns an error for empty searches,
-            # so this is a way around it
-            if search == '':
-                tweets = []
-            else:
-                # Check twitter API for all parameters
-                params = {'q': search,
-                          'result_type': 'recent',
-                          'lang': 'en',
-                          'count': 100}
-                r = requests.get(
-                    'https://api.twitter.com/1.1/search/tweets.json',
-                    headers=self.headers,
-                    params=params)
-                tweets = [tweet for tweet in r.json()['statuses']
-                          # No need for boring retweets
-                          if 'retweeted_status' not in tweet]
-                for tweet in tweets:
-                    if tweet['id'] in self.tweets:
-                        self.tweets[tweet['id']].update(tweet)
-                    else:
-                        self.tweets[tweet['id']] = Tweet(tweet)
-            if len(self.tweets) > 0:
-                tweet = self.tweets.popitem(False)[1]
-                self.tweets[tweet.id] = tweet
-                tweets = list(self.tweets.values())
-                position_rectangles(tweets, screen)
-            msg = json.dumps(tweets, default=encode_tweet)
-            self.server.send(msg)
-            # Don't want the loop to run to often,
-            # or else you hit the twitter rate limit
-            time.sleep(2)
+        try:
+            while not self.exit.is_set():
+                if self.is_search_updated:
+                    self.tweets = OrderedDict()
+                    self.is_search_updated = False
+                search = self.get_search()
+                # Twitter returns an error for empty searches,
+                # so this is a way around it
+                if search == '':
+                    tweets = []
+                else:
+                    # Check twitter API for all parameters
+                    params = {'q': search,
+                              'result_type': 'recent',
+                              'lang': 'en',
+                              'count': 100}
+                    r = requests.get(
+                        'https://api.twitter.com/1.1/search/tweets.json',
+                        headers=self.headers,
+                        params=params)
+                    tweets = [tweet for tweet in r.json()['statuses']
+                              # No need for boring retweets
+                              if 'retweeted_status' not in tweet]
+                    for tweet in tweets:
+                        if tweet['id'] in self.tweets:
+                            self.tweets[tweet['id']].update(tweet)
+                        else:
+                            self.tweets[tweet['id']] = Tweet(tweet)
+                if len(self.tweets) > 0:
+                    tweet = self.tweets.popitem(False)[1]
+                    self.tweets[tweet.id] = tweet
+                    tweets = list(self.tweets.values())
+                    position_rectangles(tweets, screen)
+                msg = json.dumps(tweets, default=encode_tweet)
+                self.server.send(msg)
+                # Don't want the loop to run to often,
+                # or else you hit the twitter rate limit
+                time.sleep(2)
+        finally:
+            self.server.send('exit')
 
     def get_search(self):
         search = ''
