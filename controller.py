@@ -1,4 +1,5 @@
 import sys
+import logging
 from threading import Thread
 from Tkinter import Tk, Listbox, Menu, END, ACTIVE, W, E
 from ttk import Frame, LabelFrame, Button, Entry
@@ -13,10 +14,14 @@ class Controller(Thread):
         self.searcher = searcher
 
     def run(self):
-        root = Tk()
-        app = GUI(self.searcher, master=root)
-        app.mainloop()
-        self.searcher.exit.set()
+        try:
+            root = Tk()
+            app = GUI(self.searcher, master=root)
+            app.mainloop()
+            self.searcher.exit.set()
+        except:
+            logging.exception("Fatal Exception Thrown")
+            raise
 
 
 class GUI(Frame):

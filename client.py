@@ -44,6 +44,9 @@ class Client(Thread):
                 tweets = json.loads(msg, object_hook=decode_tweet)
                 self.update_screen(tweets)
                 pygame.display.update()
+        except:
+            logging.exception("Fatal Exception Thrown")
+            raise
         finally:
             sock.close()
             exit.set()
@@ -89,5 +92,8 @@ if __name__ == "__main__":
             # (e.g. the program is not shutting down)
             else:
                 pygame.time.wait(10)
+    except:
+        logging.exception("Fatal Exception Thrown")
+        raise
     finally:
         pygame.quit()

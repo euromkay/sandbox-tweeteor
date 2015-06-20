@@ -24,4 +24,3 @@ if __name__ == "__main__":
     searcher.start()
     controller = Controller(searcher)
     controller.start()
-    sys.exit()

@@ -1,5 +1,6 @@
 import time
 import json
+import logging
 from collections import OrderedDict
 from threading import Thread, Lock, Event
 
@@ -126,6 +127,9 @@ class Searcher(Thread):
                 # Don't want the loop to run to often,
                 # or else you hit the twitter rate limit
                 time.sleep(2)
+        except:
+            logging.exception("Fatal Exception Thrown")
+            raise
         finally:
             self.server.send('exit')
 

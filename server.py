@@ -1,5 +1,6 @@
 """Handles communication between server process and clients."""
 import json
+import logging
 from socket import socket, error as SocketError
 from threading import Thread, Lock
 
@@ -32,9 +33,13 @@ class Server(Thread):
         Wait for incoming socket connections,
         and add all to the client list.
         """
-        while True:
-            (client, _) = self.sock.accept()
-            self.add_client(client)
+        try:
+            while True:
+                (client, _) = self.sock.accept()
+                self.add_client(client)
+        except:
+            logging.exception("Fatal Exception Thrown")
+            raise
 
     def send(self, msg):
         """Send a message to all connected clients."""
@@ -76,4 +81,4 @@ class Server(Thread):
             client.sendall(msg)
             client.recv(4)  # waiting to keep the client and server in sync
         except SocketError:
-            pass
+            logging.exception("Error in sending to client")

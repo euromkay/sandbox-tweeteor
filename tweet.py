@@ -1,4 +1,5 @@
 import os
+import logging
 import xml.sax.saxutils as xml
 from ConfigParser import SafeConfigParser
 
@@ -131,7 +132,7 @@ class Tweet(object):
                     surf = Tweet.font.render(word.text + '  ', 1, word.color)
                     word_surfs.append(surf)
                 except:
-                    pass
+                    logging.exception("Error when rendering Word")
             if len(word_surfs) == 0:
                 continue
             line = make_row(word_surfs, WHITE)
