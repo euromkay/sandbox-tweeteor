@@ -1,3 +1,4 @@
+"""Classes and functions for working with tweets."""
 import os
 import logging
 import xml.sax.saxutils as xml
@@ -21,11 +22,19 @@ TWITTER_BLUE = pygame.Color(154, 194, 223)
 
 
 class Tweet(object):
+    """
+    A representation of a tweet.
+    """
     # Helvetica is the closest to twitter's special font
     font = pygame.font.SysFont('helvetica', config.getint('font', 'size'))
-    cache = os.path.join("cache", "tweets")
+    cache_dir = os.path.join("cache", "tweets")
 
     def __init__(self, json):
+        """
+        Creates a tweet object by parsing json. This json is in
+        the format produced by the Twitter API, not the format created by
+        encode_tweet.
+        """
         self.id = json['id']
         self.retweet_count = json['retweet_count']
         self.favorite_count = json['favorite_count']
@@ -41,13 +50,21 @@ class Tweet(object):
         self.rect = surface.get_rect()
 
     def get_rect(self):
+        """Returns a Rect representing the location and size of the tweet."""
         return self.rect
 
     def get_surface(self):
-        filename = os.path.join(Tweet.cache, str(self.id) + ".png")
+        """
+        Returns a Surface depicting the Tweet
+        """
+        filename = os.path.join(Tweet.cache_dir, str(self.id) + ".png")
         return pygame.image.load(filename)
 
     def update(self, json):
+        """
+        Updates the Tweet based on a newer version of the JSON.
+        (e.g. updates retweet and favorite counts).
+        """
         if (self.retweet_count != json['retweet_count'] or
                 self.favorite_count != json['favorite_count']):
             self.retweet_count = json['retweet_count']
@@ -56,6 +73,8 @@ class Tweet(object):
             self.save_surface(tweet_surface)
 
     def create_surface(self):
+        """Creates a Surface depicting the Tweet."""
+        #TODO: Needs refactoring (including the helper methods).
         surfs = []
         image = image_handler.get_image(self.profile_image_url)
         profile_pic = pygame.transform.scale(image, (70, 70))
@@ -73,12 +92,22 @@ class Tweet(object):
         return tweet
 
     def save_surface(self, surface):
+        """
+        Saves a copy of the surface to a cache, to avoid
+        unnecessary regeneration of the Tweet Surface.
+        """
         pygame.image.save(
             surface,
-            os.path.join(Tweet.cache, str(self.id) + ".png"))
+            os.path.join(Tweet.cache_dir, str(self.id) + ".png"))
 
     @staticmethod
     def expand_links(json):
+        """
+        Parses through the Twitter API JSON for a tweet, and returns
+        a modified version of the text (e.g. expanding URLs), and a list
+        of urls for images found in the tweet. Return value is in the
+        format (text, images).
+        """
         text = json['text']
         imgs = []
         entities = []  # List of all urls and media urls in tweet
@@ -110,6 +139,10 @@ class Tweet(object):
 
     @staticmethod
     def create_bubble(content):
+        """
+        Takes a surface (content) and wraps it in a speech bubble,
+        which is returned to the caller.
+        """
         width = content.get_width()
         tail_length = width / 5
         width += BORDER_WIDTH + tail_length
@@ -124,6 +157,11 @@ class Tweet(object):
 
     @staticmethod
     def create_body(lines):
+        """
+        Create a surface representing the body of a tweet
+        (the actual words in the tweet). Takes a matrix of Words
+        (each row is a line) as input.
+        """
         surfs = []
         for line in lines:
             word_surfs = []
@@ -140,6 +178,10 @@ class Tweet(object):
         return make_column(surfs, WHITE)
 
     def create_popularity_surface(self):
+        """
+        Creates a surface holding a favorite count and a retweet count
+        for the Tweet.
+        """
         popularity_count = ''
         if self.favorite_count > 0:
             popularity_count += 'Favorites: ' + str(self.favorite_count) + ' '
@@ -156,8 +198,16 @@ class Tweet(object):
 
 
 class Word(object):
+    """
+    A representation of a word in the tweet body
+    and its attributes (currently only color).
+    """
 
     def __init__(self, text):
+        """
+        Sets the word as Blue if it is a link,
+        hashtag, or username, and as black otherwise.
+        """
         self.text = text
         ttext = text[0:1]
         if ttext == '#' or ttext == '@':
@@ -169,6 +219,11 @@ class Word(object):
 
 
 def encode_tweet(o):
+    """
+    Encodes Tweet objects as JSON. Also encodes other objects
+    needed as attributes (Rects, Words, and Colors).
+    Does NOT encode tweets in the same way the Twitter API does.
+    """
     if isinstance(o, Tweet):
         x = o.__dict__
         x['class'] = 'Tweet'
@@ -191,22 +246,23 @@ def encode_tweet(o):
 
 def decode_tweet(dictionary):
     """
-    Decodes JSON into Pygame Rects and Tweet Objects (as long as they
-    were encoded with TweetEncoder).
+    Decode Tweets from json. Also decodes Words, Colors, and Rects,
+    as they are attributes of Tweets.
+    Does NOT decode tweets from Twitter API; only decodes Tweets
+    encoded by encode_tweet.
     """
     if 'class' in dictionary:
         if dictionary['class'] == 'Tweet':
-            # Allows us to bypass normal initialization
+            # Allows us to bypass normal initialization,
+            # avoiding unnecessary work (e.g. surface generation).
             tweet = object.__new__(Tweet)
             tweet.__dict__ = dictionary
             return tweet
         elif dictionary['class'] == 'Word':
-            # Allows us to bypass normal initialization
             word = object.__new__(Word)
             word.__dict__ = dictionary
             return word
         elif dictionary['class'] == 'Color':
-            # Allows us to bypass normal initialization
             color = pygame.Color(
                 dictionary['r'],
                 dictionary['g'],

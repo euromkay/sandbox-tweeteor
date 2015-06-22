@@ -1,11 +1,14 @@
 """
 Miscellaneous functions for dealing with rectangles.
-Should be broken into multiple modules.
 """
 import pygame
 
 
 def make_column(surfaces, bg_color):
+    """
+    Make a surface containing the given surfaces in a column,
+    with the bg_color as the background color.
+    """
     width = max([o.get_width() for o in surfaces])
     height = sum([o.get_height() for o in surfaces])
     destination = pygame.Surface((width, height))
@@ -15,6 +18,10 @@ def make_column(surfaces, bg_color):
 
 
 def make_row(surfaces, bg_color):
+    """
+    Make a surface containing the given surfaces in a row,
+    with the bg_color as the background color.
+    """
     width = sum([o.get_width() for o in surfaces])
     height = max([o.get_height() for o in surfaces])
     destination = pygame.Surface((width, height))
@@ -34,7 +41,7 @@ def blit_list(sources, destination):
         destination.blit(source, rect)
 
 
-def position_rectangles(source_list, surface):
+def position_rectangles(objects, surface):
     """
     Position objects so that they can fit onto a surface.
     Returns a list of (source, rectangle) pairs, but also
@@ -45,22 +52,19 @@ def position_rectangles(source_list, surface):
     """
     x = 0
     y = 0
-    added_list = []  # List of all rectangles in current column
-    sources = []  # tuples containing sources and their rectangles
-    for source in source_list:
-        rect = source.get_rect()
-        # Starts new column if rectanges reach bottom
-        # of the destination surface
+    column = []
+    output = []
+    for o in objects:
+        rect = o.get_rect()
         if y + rect.height > surface.get_height():
             y = 0
-            # Only make the columns as wide as needed
-            x += max([r.width for r in added_list])
-            added_list = []
+            x += max([r.width for r in column])
+            column = []
         rect.x = x
         rect.y = y
-        y += rect.height  # move down a "row"
-        added_list.append(rect)
-        if hasattr(source, 'rect'):
-            source.rect = rect
-        sources.append((source, rect))
-    return sources
+        y += rect.height
+        column.append(rect)
+        if hasattr(o, 'rect'):
+            o.rect = rect
+        output.append((o, rect))
+    return output

@@ -1,26 +1,34 @@
 #!/usr/bin/python2
-"""Starts the Tweeteor Server."""
-from base64 import b64encode
-from ConfigParser import SafeConfigParser
+"""Starts the Tweeteor server."""
 import logging
-import sys
+import os
+from ConfigParser import SafeConfigParser
 
 from controller import Controller
 from searcher import Searcher
 
 if __name__ == "__main__":
-    # Starts logger for debugger
     logging.basicConfig(
         filename='log',
         level=logging.DEBUG,
         format="[%(asctime)s : %(levelname)s] [%(threadName)s] %(message)s")
     config = SafeConfigParser()
     config.read('config')
+    # An exception is thrown if you acces a non-existant directory,
+    # so we make sure they exist here
+    image_cache = os.path.join("cache", "images")
+    tweet_cache = os.path.join("cache", "tweets")
+    required_dirs = [image_cache, tweet_cache]
+    for directory in required_dirs:
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+    # Using '' as the hostname allows the socket to bind to
+    # its correct address, without you needing to know exactly what
+    # that address is.
     address = ('', config.getint('connection', 'port'))
-    # Creates credentials for twitter api
-    credentials = b64encode(
-        config.get('auth', 'key') + ':' + config.get('auth', 'secret'))
-    searcher = Searcher(credentials, address)
+    api_key = config.get('auth', 'key')
+    api_secret = config.get('auth', 'secret')
+    searcher = Searcher(api_key, api_secret, address)
     searcher.start()
     controller = Controller(searcher)
     controller.start()

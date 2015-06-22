@@ -1,3 +1,10 @@
+#!/usr/bin/python2
+"""
+Recieves and displays content from the server.
+
+When ran as a script, the first parameter is the x coordinate
+of the client, and the second is the y parameter.
+"""
 import json
 import sys
 import logging
@@ -9,14 +16,30 @@ import pygame
 
 from tweet import decode_tweet
 
-# Constants
 TWITTER_BLUE = pygame.Color(154, 194, 223)
 
 
 class Client(Thread):
+    """
+    Dedicated thread for displaying content from the server.
+    The client is relatively dumb, in that it does no processing of it's own,
+    aside from checking which tweets to display.
+    """
 
     def __init__(self, address, coords, exit):
+        """
+        Creates a Client which will connect to a server at the given address,
+        and displays Tweets that are in the "cell" represented by coords.
+        Exit is used to coordinate shutdown with the script at the bottom
+        of this module.
+
+        Coordinates start at (0,0) in the upper left, and increase as you
+        move right/down, just as in Pygame.
+        """
         Thread.__init__(self, name='Client')
+        # Setting the coordinates as a caption makes
+        # setting up Tweeteor easier, especially when
+        # testing on your own computer.
         pygame.display.set_caption(
             str(coords[0]) + "-" + str(coords[1]))
         self.coords = self.x, self.y = coords
@@ -24,36 +47,52 @@ class Client(Thread):
         self.address = address
 
     def run(self):
+        """
+        Connect to the server, and display the Tweets recieved."""
         sock = socket()
         try:
             sock.connect(self.address)
-            # This represents the window belonging to the client
             self.window = pygame.display.set_mode(json.loads(sock.recv(128)))
             sock.send('ACK')
             while not exit.is_set():
                 length = int(sock.recv(1024))
                 sock.send('ACK')  # Tells server that it got the length
                 msg = sock.recv(2048)
-                # Calls recv multiple times to get the entire message
+                # We have to call recv multiple times
+                # to ensure we get the entire message.
                 while len(msg) < length:
                     msg += sock.recv(2048)
                 sock.send('done')
-                msg = msg[0:length]  # cut off the extra bytes
+                # Recv sometimes sends extra trash bytes at the end,
+                # so we just remove them.
+                msg = msg[0:length]
                 if msg == 'exit':
                     break
                 tweets = json.loads(msg, object_hook=decode_tweet)
                 self.update_screen(tweets)
                 pygame.display.update()
         except:
+            # This block does not actually handle the error, only log it.
+            # That's why we re-raise the error, so that important errors
+            # are not silenced.
             logging.exception("Fatal Exception Thrown")
             raise
+        # The finally block guarantees that clients shutdown properly.
+        # Before this was in place, clients would freeze upon an error,
+        # forcing you to manually close them all.
         finally:
             sock.close()
             exit.set()
 
     def update_screen(self, tweets):
+        """
+        Place tweets on the screen, but only if they are actually
+        within the client's coordinates.
+        """
         self.window.fill(TWITTER_BLUE)
         width, height = self.window.get_width(), self.window.get_height()
+        # This gives us the location of our window, in regards to
+        # the rest of Tweeteor.
         area = pygame.Rect(
             self.coords[0] * width,
             self.coords[1] * height,
@@ -61,11 +100,23 @@ class Client(Thread):
             height)
         for tweet in tweets:
             if tweet.rect.colliderect(area):
+                # We have to convert the tweets global coordinates
+                # to our own window's coordinates, or else they appear
+                # in the wrong place.
                 tweet.rect.x -= area.x
                 tweet.rect.y -= area.y
                 self.window.blit(tweet.get_surface(), tweet.rect)
 
 if __name__ == "__main__":
+    if sys.argv[1] == "-h" or sys.argv[1] == "--help":
+        print """
+              Usage: python2 client.py x y
+              x is the x coordinate of the client,
+                with 0 all the way to the left.
+              y is the y coordinate of the client,
+                with 0 all the way at the top.
+              """
+        sys.exit()
     logging.basicConfig(
         filename='log',
         level=logging.DEBUG,
@@ -74,7 +125,6 @@ if __name__ == "__main__":
     config.read('config')
     address = (config.get('connection', 'address'),
                config.getint('connection', 'port'))
-    # Uses coords from file if in auto mode, otherwise asks user for coords
     coords = (int(sys.argv[1]), int(sys.argv[2]))
     exit = Event()  # Event for coordinating shutdown
     try:
@@ -82,7 +132,6 @@ if __name__ == "__main__":
         client = Client(address, coords, exit)
         client.start()
         while not exit.is_set():
-            # Exits if window was closed, and tells Client thread to close
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     exit.set()
@@ -93,6 +142,9 @@ if __name__ == "__main__":
             else:
                 pygame.time.wait(10)
     except:
+        # This block does not actually handle the error, only log it.
+        # That's why we re-raise the error, so that important errors
+        # are not silenced.
         logging.exception("Fatal Exception Thrown")
         raise
     finally:

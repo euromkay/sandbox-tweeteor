@@ -63,4 +63,5 @@ config
 log
 
 #Cache for Images and Tweet Surfaces
-cache/
+cache/images/*
+cache/tweets/*

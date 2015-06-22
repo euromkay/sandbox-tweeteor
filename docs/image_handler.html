@@ -10,7 +10,8 @@
 <font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>image_handler</strong></big></big></font></td
 ><td align=right valign=bottom
 ><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/thomas/sandbox-tweeteor/image_handler.py">/home/thomas/sandbox-tweeteor/image_handler.py</a></font></td></tr></table>
-    <p><tt>Used&nbsp;for&nbsp;downloading&nbsp;images&nbsp;from&nbsp;the&nbsp;web.</tt></p>
+    <p><tt>Used&nbsp;for&nbsp;downloading&nbsp;images&nbsp;from&nbsp;the&nbsp;web.<br>
+Images&nbsp;are&nbsp;cached&nbsp;to&nbsp;decrease&nbsp;network&nbsp;usage,&nbsp;and&nbsp;avoid&nbsp;any&nbsp;API&nbsp;rate&nbsp;limits.</tt></p>
 <p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#aa55cc">
@@ -28,7 +29,8 @@
 <font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
     
 <tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
-<td width="100%"><dl><dt><a name="-get_image"><strong>get_image</strong></a>(url)</dt><dd><tt>Retrieve&nbsp;an&nbsp;image&nbsp;from&nbsp;the&nbsp;web,&nbsp;or&nbsp;local&nbsp;cache.<br>
+<td width="100%"><dl><dt><a name="-get_image"><strong>get_image</strong></a>(url)</dt><dd><tt>Retrieve&nbsp;a&nbsp;Surface&nbsp;containing&nbsp;the&nbsp;image&nbsp;at&nbsp;the&nbsp;requested&nbsp;url.<br>
+Throws&nbsp;an&nbsp;IOError&nbsp;if&nbsp;no&nbsp;image&nbsp;was&nbsp;found.<br>
 &nbsp;<br>
 Once&nbsp;an&nbsp;image&nbsp;is&nbsp;downloaded,&nbsp;it&nbsp;is&nbsp;saved&nbsp;to&nbsp;the&nbsp;images/&nbsp;directory.<br>
 If&nbsp;a&nbsp;previously&nbsp;downloaded&nbsp;image&nbsp;is&nbsp;requested&nbsp;again,&nbsp;it&nbsp;is&nbsp;retrieved<br>
