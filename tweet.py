@@ -58,6 +58,10 @@ class Tweet(object):
         Returns a Surface depicting the Tweet
         """
         filename = os.path.join(Tweet.cache_dir, str(self.id) + ".png")
+        if not os.path.isfile(filename):
+            surface = self.create_surface()
+            self.save_surface(surface)
+            return surface
         return pygame.image.load(filename)
 
     def update(self, json):

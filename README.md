@@ -3,8 +3,6 @@ Tweeteor
 
 Meteor's social media screen saver. Searches Twitter based on input from the
 user, and displays the tweets across multiple computers.
-*NOTE:* Tweeteor assumes that all the computers share a hard drive
-(just like Meteor does). If they do not, Tweeteor will crash.
 
 Dependencies
 ------------
