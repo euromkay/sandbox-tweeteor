@@ -122,8 +122,6 @@ class ListFrame(LabelFrame):
         self.remove_button.grid(row=2, column=1, sticky=W+E)
 
     def add(self):
-        # Tkinter passes an event object to the add method,
-        # so it must be a parameter even though we don't use it.
         """
         Add the item in the input line to the list.
         """
