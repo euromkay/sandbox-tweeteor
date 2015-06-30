@@ -110,7 +110,7 @@ class ListFrame(LabelFrame):
         self.context_menu = Menu(self, tearoff=0)
         self.context_menu.add_command(label="Remove", command=self.remove)
         self.input = Entry(self)
-        self.input.bind("<Return>", self.add)
+        self.input.bind("<Return>", lambda event: self.add())
         self.input.grid(row=1, columnspan=2)
         self.add_button = Button(self)
         self.add_button['text'] = "Add"
@@ -121,7 +121,7 @@ class ListFrame(LabelFrame):
         self.remove_button['command'] = self.remove
         self.remove_button.grid(row=2, column=1, sticky=W+E)
 
-    def add(self, event):
+    def add(self):
         # Tkinter passes an event object to the add method,
         # so it must be a parameter even though we don't use it.
         """
