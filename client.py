@@ -146,5 +146,4 @@ if __name__ == "__main__":
         logging.exception("Fatal Exception Thrown")
         raise
     finally:
-        client.sock.close()
         pygame.quit()
