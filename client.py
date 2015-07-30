@@ -44,25 +44,24 @@ class Client(Thread):
             str(coords[0]) + "-" + str(coords[1]))
         self.coords = self.x, self.y = coords
         self.exit = exit
-        self.address = address
+        self.sock = socket()
+        self.sock.connect(address)
+        self.window = pygame.display.set_mode(json.loads(self.sock.recv(128)))
+        self.sock.send('ACK')
 
     def run(self):
         """
         Connect to the server, and display the Tweets recieved."""
-        sock = socket()
         try:
-            sock.connect(self.address)
-            self.window = pygame.display.set_mode(json.loads(sock.recv(128)))
-            sock.send('ACK')
             while not exit.is_set():
-                length = int(sock.recv(1024))
-                sock.send('ACK')  # Tells server that it got the length
-                msg = sock.recv(2048)
+                length = int(self.sock.recv(1024))
+                self.sock.send('ACK')  # Tells server that it got the length
+                msg = self.sock.recv(2048)
                 # We have to call recv multiple times
                 # to ensure we get the entire message.
                 while len(msg) < length:
-                    msg += sock.recv(2048)
-                sock.send('done')
+                    msg += self.sock.recv(2048)
+                self.sock.send('done')
                 # Recv sometimes sends extra trash bytes at the end,
                 # so we just remove them.
                 msg = msg[0:length]
@@ -81,7 +80,6 @@ class Client(Thread):
         # Before this was in place, clients would freeze upon an error,
         # forcing you to manually close them all.
         finally:
-            sock.close()
             exit.set()
 
     def update_screen(self, tweets):
@@ -148,4 +146,5 @@ if __name__ == "__main__":
         logging.exception("Fatal Exception Thrown")
         raise
     finally:
+        client.sock.close()
         pygame.quit()
