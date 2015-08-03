@@ -21,13 +21,14 @@ Installation
 5. Change the address field in config to the IP address that the server
    will run on.
 6. If you are on a Unix-like system, set main.py, client.py,
-   and clientrunner.sh as executable.
+   clientlauncher.sh, and clienttester.sh as executable.
 
 Usage
 -----
 
 1. Run main.py on the server computer.
-2. Run client.py on all the clients. If the clients are all on one
-   computer (e.g. during testing), you can just run clientrunner.sh instead.
+2. Run clientlauncher.sh (if on Meteor), or clienttester.sh,
+   if you are testing on your laptop. If you are running on some
+   other system, manually start client.py on each client.
 3. If you want to change the number of windows, their sizes,
    or other settings, edit config.
