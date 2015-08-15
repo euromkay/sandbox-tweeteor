@@ -78,7 +78,7 @@ class Tweet(object):
 
     def create_surface(self):
         """Creates a Surface depicting the Tweet."""
-        #TODO: Needs refactoring (including the helper methods).
+        # TODO: Needs refactoring (including the helper methods).
         surfs = []
         image = image_handler.get_image(self.profile_image_url)
         profile_pic = pygame.transform.scale(image, (70, 70))

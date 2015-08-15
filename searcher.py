@@ -16,6 +16,7 @@ from tweet import Tweet, encode_tweet
 from server import Server
 from rectangle_handler import position_rectangles
 from constants import SCR_SIZE
+import safesearch
 
 
 class Searcher(Thread):
@@ -146,9 +147,10 @@ class Searcher(Thread):
                         'https://api.twitter.com/1.1/search/tweets.json',
                         headers=self.headers,
                         params=params)
-                    tweets = [tweet for tweet in r.json()['statuses']
-                              # No need for boring retweets
-                              if 'retweeted_status' not in tweet]
+                    tweets = [tweet for tweet in safesearch.safe_filter(
+                        r.json()['statuses'])
+                        # No need for boring retweets
+                        if 'retweeted_status' not in tweet]
                     for tweet in tweets:
                         if tweet['id'] in self.tweets:
                             self.tweets[tweet['id']].update(tweet)
