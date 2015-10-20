@@ -27,6 +27,7 @@ class Searcher(Thread):
     """
 
     def __init__(self, key, secret, address):
+        
         """
         Connect to Twitter using the given API key and API secret,
         and open a socket at the given address for Tweeteor clients
