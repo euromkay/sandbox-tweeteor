@@ -46,7 +46,12 @@ class Client(Thread):
         self.exit = exit
         self.sock = socket()
         self.sock.connect(address)
-        self.window = pygame.display.set_mode(json.loads(self.sock.recv(128)))
+        coords = json.loads(self.sock.recv(128))
+        if coords == (1920, 1200):
+            mode = PYGAME.FULLSCREEN
+        else:
+            mode = pygame.NOFRAME
+        self.window = pygame.display.set_mode(coords, mode, 0)
         self.sock.send('ACK')
 
     def run(self):
