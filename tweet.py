@@ -7,7 +7,8 @@ from ConfigParser import SafeConfigParser
 import pygame
 
 import image_handler
-from rectangle_handler import make_row, make_column
+from rectangle_handler import make_row, make_column, make_header
+import config2
 
 config = SafeConfigParser()
 config.read('config')
@@ -18,7 +19,7 @@ BORDER_HEIGHT = 20
 WHITE = pygame.Color(255, 255, 255, 255)
 BLACK = pygame.Color(0, 0, 0, 255)
 BLUE = pygame.Color(0, 0, 255, 255)
-TWITTER_BLUE = pygame.Color(154, 194, 223)
+TWITTER_BLUE = BLACK
 
 
 class Tweet(object):
@@ -79,21 +80,34 @@ class Tweet(object):
     def create_surface(self):
         """Creates a Surface depicting the Tweet."""
         # TODO: Needs refactoring (including the helper methods).
-        surfs = []
-        image = image_handler.get_image(self.profile_image_url)
-        profile_pic = pygame.transform.scale(image, (70, 70))
-        surfs.append(profile_pic)
+        header = []
+
+        profile_pic = image_handler.get_image(self.profile_image_url)
+        size = config2.config['profile_size']
+        profile_pic = pygame.transform.scale(profile_pic, (size, size))
+        header.append(profile_pic)
+
         name = Tweet.font.render('@' + self.screen_name, 1, BLACK)
-        surfs.append(name)
+        header.append(name)
+
+
         text = Tweet.create_body(self.lines)
-        content = [text]
+        content = []
+        content.append(make_header(header, WHITE, text.get_rect().width))
+        content.append(text)
+
         content.extend([image_handler.get_image(img) for img in self.imgs])
+        
         popularity_bar = self.create_popularity_surface()
         content.append(popularity_bar)
+        
         content_surf = make_column(content, WHITE)
-        surfs.append(Tweet.create_bubble(content_surf))
-        tweet = make_column(surfs, TWITTER_BLUE)
-        return tweet
+        content_surf = Tweet.create_bubble(content_surf)#surrounds the content in the bubble
+        surfs = []
+        surfs.append(content_surf) 
+
+        tweet = make_column(surfs, BLACK)
+        return content_surf
 
     def save_surface(self, surface):
         """
@@ -148,14 +162,17 @@ class Tweet(object):
         which is returned to the caller.
         """
         width = content.get_width()
-        tail_length = width / 5
+        #tail_length = width / 5
+        tail_length = 20
         width += BORDER_WIDTH + tail_length
         height = content.get_height() + 2 * BORDER_HEIGHT
+
         destination = pygame.Surface((width, height))
         destination.fill(TWITTER_BLUE)
+
         speech_bubble = pygame.image.load('speech.png')
-        destination.blit(
-            pygame.transform.scale(speech_bubble, (width, height)), [0, 0])
+        speech_bubble = pygame.transform.scale(speech_bubble, (width, height))
+        destination.blit(speech_bubble, [0, 0])
         destination.blit(content, [tail_length, BORDER_HEIGHT])
         return destination
 
@@ -166,19 +183,36 @@ class Tweet(object):
         (the actual words in the tweet). Takes a matrix of Words
         (each row is a line) as input.
         """
-        surfs = []
+
+        words = []
         for line in lines:
-            word_surfs = []
             for word in line:
-                try:
-                    surf = Tweet.font.render(word.text + '  ', 1, word.color)
-                    word_surfs.append(surf)
-                except:
-                    logging.exception("Error when rendering Word")
-            if len(word_surfs) == 0:
-                continue
-            line = make_row(word_surfs, WHITE)
-            surfs.append(line)
+                word.text = word.text.rstrip()
+                words.append(word)
+
+
+        surfs = []
+        word_surfs = []
+        line_len = 0
+        for word in words:
+            word_len = len(word.text)
+            if word_len + line_len > 40:
+                line_surf  = make_row(word_surfs, WHITE)
+                surfs.append(line_surf)
+                word_surfs = []
+                line_len   = 0
+            try:
+                line_len += len(word.text)
+                word_surf = Tweet.font.render(word.text + '  ', 1, word.color)
+                word_surfs.append(word_surf)
+            except:
+                logging.exception("Error when rendering Word")
+
+        if len(word_surfs) != 0:
+            line_surf = make_row(word_surfs, WHITE)
+            surfs.append(line_surf)
+
+
         return make_column(surfs, WHITE)
 
     def create_popularity_surface(self):

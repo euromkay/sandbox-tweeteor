@@ -148,19 +148,20 @@ class Searcher(Thread):
                         'https://api.twitter.com/1.1/search/tweets.json',
                         headers=self.headers,
                         params=params)
-                    tweets = [tweet for tweet in safesearch.safe_filter(
-                        r.json()['statuses'])
-                        # No need for boring retweets
-                        if 'retweeted_status' not in tweet]
+                    if 'statuses' in r.json():
+                        tweets = [tweet for tweet in safesearch.safe_filter(r.json()['statuses']) if 'retweeted_status' not in tweet]
+                    else:
+                        print r.json()
+                        continue
                     for tweet in tweets:
                         if tweet['id'] in self.tweets:
                             self.tweets[tweet['id']].update(tweet)
                         else:
                             self.tweets[tweet['id']] = Tweet(tweet)
-                if len(self.tweets) > 0:
+                #if len(self.tweets) > 0:
                     # Rotating the tweets, to simulate scrolling.
-                    tweet = self.tweets.popitem(False)[1]
-                    self.tweets[tweet.id] = tweet
+                    #tweet = self.tweets.popitem(False)[1]
+                    #self.tweets[tweet.id] = tweet
                 tweets = list(self.tweets.values())
                 position_rectangles(tweets, screen)
                 msg = json.dumps(tweets, default=encode_tweet)

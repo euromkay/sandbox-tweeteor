@@ -3,6 +3,7 @@ import json
 import logging
 from socket import socket, error as SocketError
 from threading import Thread, Lock
+import select
 
 from constants import WIN_SIZE
 
@@ -30,15 +31,24 @@ class Server(Thread):
         # Daemon threads automatically die when no other threads
         # are left in a process, making shutdown easier.
         self.setDaemon(True)
+        self.running = True
 
     def run(self):
         """
         Accept incoming connections from clients.
         """
         try:
-            while True:
-                (client, _) = self.sock.accept()
-                self.add_client(client)
+            while self.running:
+                (rr, _, _) = select.select([self.sock], [], [], 1)
+                if rr:
+                    (client, _) = self.sock.accept()
+                    self.add_client(client)
+            print 'stopped'
+            for c in self.clients:
+                c.close()
+            self.sock.close()
+            print 'exited'
+
         except:
             # This block does not actually handle the error, only log it.
             # That's why we re-raise the error, so that important errors
@@ -55,6 +65,12 @@ class Server(Thread):
         with self.client_lock:
             for client in self.clients:
                 Server.send_to_client(client, message)
+
+        if message == 'exit':
+            print 'exiting'
+            self.running = False
+            self.join()
+
 
     def add_client(self, client):
         """

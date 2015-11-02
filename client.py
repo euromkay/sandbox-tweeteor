@@ -14,9 +14,11 @@ from ConfigParser import SafeConfigParser
 
 import pygame
 
+import config2
+
 from tweet import decode_tweet
 
-TWITTER_BLUE = pygame.Color(154, 194, 223)
+TWITTER_BLUE = pygame.Color(0, 0, 0)
 
 
 class Client(Thread):
@@ -47,10 +49,7 @@ class Client(Thread):
         self.sock = socket()
         self.sock.connect(address)
         coords = json.loads(self.sock.recv(128))
-        if coords == (1920, 1200):
-            mode = PYGAME.FULLSCREEN
-        else:
-            mode = pygame.NOFRAME
+        mode = config2.config['mode']
         self.window = pygame.display.set_mode(coords, mode, 0)
         self.sock.send('ACK')
 
@@ -111,7 +110,7 @@ class Client(Thread):
                 self.window.blit(tweet.get_surface(), tweet.rect)
 
 if __name__ == "__main__":
-    if sys.argv[1] == "-h" or sys.argv[1] == "--help":
+    if len(sys.argv) != 3 or sys.argv[1] == "-h" or sys.argv[1] == "--help":
         print """
               Usage: python2 client.py x y
               x is the x coordinate of the client,

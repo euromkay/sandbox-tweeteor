@@ -22,7 +22,6 @@ def get_image(url):
     directory = os.path.join("cache", "images")
     # Slashes are removed from the image name to avoid file naming problems.
     filename = os.path.join(directory, url.replace('/', '').replace(':thumb', ''))
-    print url
     if not os.path.isfile(filename):
         img_request = requests.get(url)
         if img_request.status_code == 200:

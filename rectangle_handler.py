@@ -29,6 +29,31 @@ def make_row(surfaces, bg_color):
     blit_list(surfaces, destination)
     return destination
 
+def make_header(surfaces, bg_color, total_width):
+    height = max([o.get_height() for o in surfaces])
+    width = sum([o.get_width() for o in surfaces])
+
+    img = surfaces[0]
+    img_rect = img.get_rect()
+
+    screenname = surfaces[1]
+    screenname_rect = screenname.get_rect()
+
+    img_rect.x = (total_width - width)/2
+    screenname_rect.x = img_rect.x + img_rect.width
+    screenname_rect.y = (height - screenname_rect.height)/2
+
+    sources = []
+    sources.append((img, img_rect))
+    sources.append((screenname, screenname_rect))
+
+    destination = pygame.Surface((total_width, height))
+    destination.fill(bg_color)
+
+    for (source, rect) in sources:
+        destination.blit(source, rect)
+    return destination
+
 
 def blit_list(sources, destination):
     """
