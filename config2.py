@@ -7,5 +7,6 @@ config = {
 	'width' : 800,
 	'debug' : True,
 	'mode' : pygame.RESIZABLE,
-	'profile_size' : 70
+	'profile_size' : 70,
+	'random_position' : True
 }

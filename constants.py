@@ -14,11 +14,12 @@ Contains the following constants:
 All dimensions are in pixels.
 """
 from ConfigParser import SafeConfigParser
+import config2
 
 config = SafeConfigParser()
 config.read('config')
-WIN_WIDTH = config.getint('window', 'width')
-WIN_HEIGHT = config.getint('window', 'height')
+WIN_WIDTH  = config2.config['width']
+WIN_HEIGHT = config2.config['height']
 WIN_SIZE = (WIN_WIDTH, WIN_HEIGHT)
 WIN_PER_ROW = config.getint('window', 'win_per_row')
 WIN_PER_COLUMN = config.getint('window', 'win_per_col')

@@ -168,7 +168,7 @@ class Tweet(object):
         height = content.get_height() + 2 * BORDER_HEIGHT
 
         destination = pygame.Surface((width, height))
-        destination.fill(TWITTER_BLUE)
+        #destination.fill(TWITTER_BLUE)
 
         speech_bubble = pygame.image.load('speech.png')
         speech_bubble = pygame.transform.scale(speech_bubble, (width, height))

@@ -14,9 +14,11 @@ import pygame
 
 from tweet import Tweet, encode_tweet
 from server import Server
-from rectangle_handler import position_rectangles
+from rectangle_handler import position_rectangles, random_position
 from constants import SCR_SIZE
 import safesearch
+
+import config2
 
 
 class Searcher(Thread):
@@ -128,6 +130,7 @@ class Searcher(Thread):
         """
         screen = pygame.Surface(SCR_SIZE)
         self.server.start()
+        tweet_positions = dict()
         try:
             while not self.exit.is_set():
                 if self.is_search_updated:
@@ -163,7 +166,10 @@ class Searcher(Thread):
                     #tweet = self.tweets.popitem(False)[1]
                     #self.tweets[tweet.id] = tweet
                 tweets = list(self.tweets.values())
-                position_rectangles(tweets, screen)
+                if config2.config['random_position']:
+                    random_position(tweets, screen, tweet_positions)
+                else:
+                    position_rectangles(tweets, screen)
                 msg = json.dumps(tweets, default=encode_tweet)
                 self.server.send(msg)
                 # Don't want the loop to run to often,

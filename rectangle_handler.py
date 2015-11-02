@@ -2,6 +2,8 @@
 Miscellaneous functions for dealing with rectangles.
 """
 import pygame
+import random
+from config2 import config
 
 
 def make_column(surfaces, bg_color):
@@ -39,6 +41,8 @@ def make_header(surfaces, bg_color, total_width):
     screenname = surfaces[1]
     screenname_rect = screenname.get_rect()
 
+    if total_width < width:
+        total_width = width
     img_rect.x = (total_width - width)/2
     screenname_rect.x = img_rect.x + img_rect.width
     screenname_rect.y = (height - screenname_rect.height)/2
@@ -75,6 +79,7 @@ def position_rectangles(objects, surface):
     Objects are placed top to bottom, left to right. Works
     on all objects that have a get_rect() method, not just surfaces.
     """
+    #all objects is basically surfaces and tweets
     x = 0
     y = 0
     column = []
@@ -93,3 +98,38 @@ def position_rectangles(objects, surface):
             o.rect = rect
         output.append((o, rect))
     return output
+
+def random_position(tweets, surface, tweet_positions):
+
+    height = config['height']
+    width = config['width']
+
+    for t in tweets:
+        rect = t.get_rect()
+        if t.id in tweet_positions:
+            coords = tweet_positions[t.id]
+            rect.x = coords[0]
+            rect.y = coords[1]
+            continue
+
+        x_col = random.randint(0, config['cols'] - 1)
+        y_row = random.randint(0, config['rows'] - 1)
+
+        available_width  = width  - rect.width
+        available_height = height - rect.height
+
+        if available_height < 0:
+            available_height = height / 2
+        if available_width < 0:
+            available_width = width / 2
+
+        rect.x = random.randint(0, available_width)
+        rect.y = random.randint(0, available_height)
+
+        rect.x += x_col * width
+        rect.y += y_row * height
+
+        tweet_positions[t.id] = (rect.x, rect.y)
+
+
+
