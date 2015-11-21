@@ -36,19 +36,32 @@ class Tweet(object):
         the format produced by the Twitter API, not the format created by
         encode_tweet.
         """
+        self.special = False
+
         self.id = json['id']
         self.retweet_count = json['retweet_count']
         self.favorite_count = json['favorite_count']
         self.profile_image_url = json['user']['profile_image_url']
         self.screen_name = json['user']['screen_name']
+        if self.screen_name.lower() == 'sdsc_ucsd':
+            self.special = True
+        if self.screen_name.lower() == 'words_sdsc':
+            self.special = True
+        if self.screen_name.lower() == 'rpwagner':
+            self.special = True
+
         text, self.imgs = Tweet.expand_links(json)
         lines = text.split('\n')
         self.lines = []
         for line in lines:
+            if '#tweeteor' in line:
+                self.special = True
             self.lines.append([Word(word) for word in line.split()])
         surface = self.create_surface()
         self.save_surface(surface)
         self.rect = surface.get_rect()
+
+
 
     def get_rect(self):
         """Returns a Rect representing the location and size of the tweet."""
@@ -87,7 +100,9 @@ class Tweet(object):
         profile_pic = pygame.transform.scale(profile_pic, (size, size))
         header.append(profile_pic)
 
+        Tweet.font.set_underline(True)
         name = Tweet.font.render('@' + self.screen_name, 1, BLACK)
+        Tweet.font.set_underline(False)
         header.append(name)
 
 
@@ -183,6 +198,7 @@ class Tweet(object):
         (the actual words in the tweet). Takes a matrix of Words
         (each row is a line) as input.
         """
+        MAX_LENGTH = config2.config['max_text_length']
 
         words = []
         for line in lines:
@@ -190,13 +206,30 @@ class Tweet(object):
                 word.text = word.text.rstrip()
                 words.append(word)
 
+        while True:
+            bigWord = None
+            for word in words:
+                if len(word.text) > MAX_LENGTH:
+                    bigWord = word
+                    break
+            if bigWord == None:
+                break
+            index = words.index(bigWord)
+            beginChunk = bigWord.text[:MAX_LENGTH]
+            newWord = Word(beginChunk)
+            newWord.color = bigWord.color
+            bigWord.text = bigWord.text[MAX_LENGTH:]
+            words = words[:index] + [newWord] + words[index:]
+
+
+
 
         surfs = []
         word_surfs = []
         line_len = 0
         for word in words:
             word_len = len(word.text)
-            if word_len + line_len > 40:
+            if word_len + line_len > MAX_LENGTH:
                 line_surf  = make_row(word_surfs, WHITE)
                 surfs.append(line_surf)
                 word_surfs = []

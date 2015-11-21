@@ -1,12 +1,14 @@
 import pygame
 
 config = {
-	'rows' : 1,
-	'cols' : 1,
-	'height': 800,
-	'width' : 800,
+	'rows' : 3,
+	'cols' : 5,
+	'height': 700,
+	'width' : 700,
 	'debug' : True,
 	'mode' : pygame.RESIZABLE,
 	'profile_size' : 70,
-	'random_position' : True
+	'random_position' : True,
+	'max_text_length': 40,
+	'border': 10
 }

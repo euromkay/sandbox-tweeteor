@@ -51,6 +51,7 @@ class Client(Thread):
         coords = json.loads(self.sock.recv(128))
         mode = config2.config['mode']
         self.window = pygame.display.set_mode(coords, mode, 0)
+        pygame.mouse.set_visible(False)
         self.sock.send('ACK')
 
     def run(self):

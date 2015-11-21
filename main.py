@@ -32,3 +32,5 @@ if __name__ == "__main__":
     searcher.start()
     controller = Controller(searcher)
     controller.start()
+    for user in ['rpwagner', 'NSF_CISE', 'iSupercomputing', 'HPCwire', 'HPCatDell', 'HPC_Guru', 'insidehpc', 'Internet2', 'Livermore_Comp', 'DonaLCrawford', 'OLCFGOV', 'AeonComputing', 'Intersect360', 'NASA_Supercomp', 'intel', 'NERSC', 'mellanoxtech', 'cray_inc', 'NCSAatIllinois', 'IntelHPC', 'WorDS_SDSC', 'SDSC_UCSD']:#, 'XSEDEscience', 'TACC', 'psc_live', ]:
+        searcher.add_user(user)

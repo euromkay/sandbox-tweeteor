@@ -43,9 +43,9 @@ def make_header(surfaces, bg_color, total_width):
 
     if total_width < width:
         total_width = width
-    img_rect.x = (total_width - width)/2
+    img_rect.x = 0#(total_width - width)/2
     screenname_rect.x = img_rect.x + img_rect.width
-    screenname_rect.y = (height - screenname_rect.height)/2
+    screenname_rect.y = 0#(height - screenname_rect.height)/2
 
     sources = []
     sources.append((img, img_rect))
@@ -111,8 +111,14 @@ def random_position(tweets, surface, tweet_positions):
             rect.x = coords[0]
             rect.y = coords[1]
             continue
-
-        x_col = random.randint(0, config['cols'] - 1)
+        if config['cols'] == 1: #special case, shouldn't ever really happen
+            x_col = 0
+        elif t.special:#goes into the middle column because we want it to be prominent
+            x_col = 2
+        else: #pick
+            x_col = random.randint(0, config['cols'] - 2)
+            if x_col >= 2: #if its 2 or greater, we dont' want anyhting in row 2, so move it up
+                x_col += 1
         y_row = random.randint(0, config['rows'] - 1)
 
         available_width  = width  - rect.width
@@ -123,8 +129,9 @@ def random_position(tweets, surface, tweet_positions):
         if available_width < 0:
             available_width = width / 2
 
-        rect.x = random.randint(0, available_width)
-        rect.y = random.randint(0, available_height)
+        border = config['border']
+        rect.x = random.randint(border, available_width - border)
+        rect.y = random.randint(border, available_height - border)
 
         rect.x += x_col * width
         rect.y += y_row * height

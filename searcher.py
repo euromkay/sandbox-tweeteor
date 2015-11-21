@@ -52,7 +52,7 @@ class Searcher(Thread):
         self.excluded_words = []
         self.excluded_users = []
         self.lock = Lock()
-        self.is_search_updated = False
+        self.is_search_updated = True
         self.server = Server(address)
         self.exit = Event()
         # We use an OrderedDict because it allows us to order the tweets
